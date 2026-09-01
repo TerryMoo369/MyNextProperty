@@ -1,10 +1,9 @@
 CREATE TABLE IF NOT EXISTS crime (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    region_id INTEGER NOT NULL,
+    state_id INTEGER NOT NULL REFERENCES state(id),
     date TEXT NOT NULL,
     crime_category TEXT NOT NULL,
-    cases INTEGER NOT NULL,
-    FOREIGN KEY(region_id) REFERENCES regions(region_id)
+    cases INTEGER NOT NULL
 );
 
-CREATE INDEX IF NOT EXISTS idx_crime_region_date ON crime(region_id, date);
+CREATE INDEX IF NOT EXISTS idx_crime_state_date ON crime(state_id, date);
