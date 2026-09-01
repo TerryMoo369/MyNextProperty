@@ -23,7 +23,7 @@ class DatabaseHelper {
         final batch = db.batch();
 
         final sqlFiles = [
-          'assets/sql/regions.sql',
+          'assets/sql/state.sql',
           'assets/sql/population.sql',
           'assets/sql/economy.sql',
           'assets/sql/crime.sql',
@@ -43,22 +43,22 @@ class DatabaseHelper {
     );
   }
 
-  /// Ensures a region exists in the dimension table and returns its ID
-  Future<int> getOrCreateRegionId(String stateName) async {
+  /// Ensures a state exists in the dimension table and returns its ID
+  Future<int> getOrCreateStateId(String stateName) async {
     final db = await database;
     final List<Map<String, dynamic>> result = await db.query(
-      'regions',
-      columns: ['region_id'],
+      'state',
+      columns: ['id'],
       where: 'state_name = ?',
       whereArgs: [stateName],
     );
 
     if (result.isNotEmpty) {
-      return result.first['region_id'] as int;
+      return result.first['id'] as int;
     }
 
     return await db.insert(
-      'regions',
+      'state',
       {'state_name': stateName},
       conflictAlgorithm: ConflictAlgorithm.ignore,
     );

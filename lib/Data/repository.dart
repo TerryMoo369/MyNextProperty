@@ -9,10 +9,10 @@ class DataRepository {
     final placeholders = List.filled(states.length, '?').join(',');
 
     return await _dbHelper.rawQuery('''
-      SELECT r.state_name, p.date, p.population_000 
+      SELECT s.state_name, p.date, p.population_000 
       FROM population p
-      JOIN regions r ON p.region_id = r.region_id
-      WHERE r.state_name IN ($placeholders) 
+      JOIN state s ON s.id = s.region_id
+      WHERE s.state_name IN ($placeholders) 
         AND p.sex = 'both' AND p.age = 'overall'
       ORDER BY p.date ASC
     ''', states);
@@ -20,9 +20,9 @@ class DataRepository {
 
   Future<List<Map<String, dynamic>>> getLatestEconomicData() async {
     return await _dbHelper.rawQuery('''
-      SELECT r.state_name, e.income_median, e.poverty_absolute, e.cpi_index 
+      SELECT s.state_name, e.income_median, e.poverty_absolute, e.cpi_index 
       FROM economy e
-      JOIN regions r ON e.region_id = r.region_id
+      JOIN state s ON e.state_id = s.state_id
       WHERE e.date = (SELECT MAX(date) FROM economy)
     ''');
   }
@@ -31,8 +31,8 @@ class DataRepository {
     return await _dbHelper.rawQuery('''
       SELECT f.date, f.amount_rm_mil 
       FROM state_finance f
-      JOIN regions r ON f.region_id = r.region_id
-      WHERE r.state_name = ? AND f.finance_type = 'revenue'
+      JOIN state s ON f.state_id = s.state_id
+      WHERE s.state_name = ? AND f.finance_type = 'revenue'
       ORDER BY f.date DESC
     ''', [stateName]);
   }
