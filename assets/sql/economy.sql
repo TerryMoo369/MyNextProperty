@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS economy(
     income_median INTEGER,
     income_mean INTEGER,
     poverty_absolute REAL,
-    cpi_index REAL,
+    cpi_index REAL
 );
 
 CREATE INDEX IF NOT EXISTS idx_econ_region_date ON economy(state_id, date);

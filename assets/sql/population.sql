@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS population (
     sex TEXT,
     age TEXT,
     ethnicity TEXT,
-    population_000 REAL,
+    population_000 REAL
 );
 
 CREATE INDEX IF NOT EXISTS idx_pop_region_date ON population(state_id, date);
