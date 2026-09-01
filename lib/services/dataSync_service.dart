@@ -2,6 +2,7 @@ import 'package:sqflite/sqflite.dart';
 import '../Data/dataGovApi.dart';
 import '../Data/databaseHelper.dart';
 import '../Data/queryBuilder.dart';
+import '../Data/Dataset.dart';
 
 class DataSyncService {
   final DataGovApi _apiClient = DataGovApi();
@@ -17,19 +18,19 @@ class DataSyncService {
 
     for (var item in rawData) {
       final stateName = item['state']?.toString();
-      int? regionId;
+      int? stateId;
 
       if (stateName != null) {
-        regionId = await _dbHelper.getOrCreateRegionId(stateName);
+        stateId = await _dbHelper.getOrCreateStateId(stateName);
       }
 
       switch (datasetId) {
-        case 'population_state':
-          if (regionId != null) {
+        case Dataset.POPULATION_STATE:
+          if (stateId != null) {
             batch.insert(
               'population',
               {
-                'region_id': regionId,
+                'state_id': stateId,
                 'date': item['date'],
                 'sex': item['sex'],
                 'age': item['age'],
@@ -41,12 +42,12 @@ class DataSyncService {
           }
           break;
 
-        case 'cpi_state':
-          if (regionId != null) {
+        case Dataset.CPI_STATE:
+          if (stateId != null) {
             batch.insert(
               'economy',
               {
-                'region_id': regionId,
+                'state_id': stateId,
                 'date': item['date'],
                 'cpi_index': (item['index'] as num?)?.toDouble(),
               },
@@ -55,12 +56,12 @@ class DataSyncService {
           }
           break;
 
-        case 'crime_district':
-          if (regionId != null) {
+        case Dataset.CRIME_DISTRICT:
+          if (stateId != null) {
             batch.insert(
               'crime',
               {
-                'region_id': regionId,
+                'state_id': stateId,
                 'date': item['date'],
                 'crime_category': item['category'] ?? 'overall',
                 'cases': (item['crimes'] as num?)?.toInt() ?? 0,
@@ -70,12 +71,12 @@ class DataSyncService {
           }
           break;
 
-        case 'state_revenue':
-          if (regionId != null) {
+        case Dataset.STATE_REVENUE:
+          if (stateId != null) {
             batch.insert(
               'state_finance',
               {
-                'region_id': regionId,
+                'state_id': stateId,
                 'date': item['date'],
                 'finance_type': 'revenue',
                 'category': item['revenue_type'] ?? 'total',
@@ -86,12 +87,12 @@ class DataSyncService {
           }
           break;
 
-        case 'hh_basic_amenities_state':
-          if (regionId != null) {
+        case Dataset.HH_BASIC_AMENITIES_STATE:
+          if (stateId != null) {
             batch.insert(
               'utilities',
               {
-                'region_id': regionId,
+                'state_id': stateId,
                 'date': item['date'],
                 'utility_type': item['amenity_type'] ?? 'unknown',
                 'access_percentage': (item['percentage'] as num?)?.toDouble() ?? 0.0,
@@ -101,7 +102,7 @@ class DataSyncService {
           }
           break;
 
-        case 'fuelprice':
+        case Dataset.FUELPRICE:
           batch.insert(
             'fuelprice',
             {
