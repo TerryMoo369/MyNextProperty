@@ -1,0 +1,6 @@
+CREATE TABLE IF NOT EXISTS state (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    state_name TEXT UNIQUE NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_state_name ON state(state_name);
