@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
-import 'pages/map_view/home_page.dart';
+import 'package:provider/provider.dart';
+import 'theme/app_theme.dart';
+import 'theme/theme_provider.dart';
+import 'screens/main_layout.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  // TODO: Initialize DataSyncService and DatabaseHelper here later
   runApp(const MyApp());
 }
 
@@ -10,11 +15,20 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Student App',
+    return ChangeNotifierProvider(
+      create: (context) => ThemeProvider(),
+      builder: (context, _) {
+        final themeProvider = Provider.of<ThemeProvider>(context);
 
-      home: const HomePage(),
+        return MaterialApp(
+          title: 'MyNextProperty',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: themeProvider.themeMode,
+          home: const MainLayout(),
+        );
+      },
     );
   }
 }
