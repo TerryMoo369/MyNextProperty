@@ -38,3 +38,4 @@ flutter:
   # allow sqlite read sql scripts
   assets:
     - assets/sql/
+    - assets/geo/malaysia_states.geojson
