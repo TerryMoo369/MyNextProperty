@@ -36,4 +36,38 @@ class DataRepository {
       ORDER BY f.date DESC
     ''', [stateName]);
   }
+
+  Future<List<Map<String, dynamic>>> getMapPopulationData() async {
+    return await _dbHelper.rawQuery('''
+    SELECT DISTINCT
+      s.id AS state_id,
+      s.state_name,
+      p.date,
+      p.population_000
+    FROM population p
+    JOIN state s
+      ON p.state_id = s.id
+    WHERE p.sex = 'overall_sex'
+      AND p.age = 'overall_age'
+      AND p.ethnicity = 'overall_ethnicity'
+      AND p.date = (
+        SELECT MAX(p2.date)
+        FROM population p2
+        WHERE p2.state_id = p.state_id
+          AND p2.sex = 'overall_sex'
+          AND p2.age = 'overall_age'
+          AND p2.ethnicity = 'overall_ethnicity'
+      )
+    ORDER BY s.state_name ASC
+  ''');
+  }
+
+  Future<List<Map<String, dynamic>>> testPopulationTable() async {
+    return await _dbHelper.rawQuery('''
+    SELECT *
+    FROM population
+    LIMIT 5
+  ''');
+  }
+
 }
