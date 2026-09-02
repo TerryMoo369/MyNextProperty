@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:mynextproperty/Data/repository.dart';
+import 'package:mynextproperty/services/dataSync_service.dart';
+import 'package:mynextproperty/Data/Dataset.dart';
+import 'dart:convert';
+import 'package:flutter/services.dart' show rootBundle;
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -11,19 +16,104 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int currentIndex = 0;
+  List<LatLng> kedahTestPoints = [];
 
+  final DataSyncService _syncService = DataSyncService();
+  final DataRepository _repository = DataRepository();
   final TextEditingController startController =
   TextEditingController(text: 'Kepong');
 
   final TextEditingController destinationController =
   TextEditingController(text: 'Batu Pahat');
 
+
+  @override
+  void initState() {
+    super.initState();
+
+    _testGeoJson();
+  }
+
+  Future<void> _testGeoJson() async {
+    try {
+      final String jsonString = await rootBundle.loadString(
+        'assets/geo/malaysia_states.geojson',
+      );
+
+      final Map<String, dynamic> geoJson =
+      jsonDecode(jsonString);
+
+      final List<dynamic> features =
+      geoJson['features'];
+
+      print('===== GEOJSON TEST =====');
+      print('Total features: ${features.length}');
+
+      final geometryTypes = features
+          .map((feature) => feature['geometry']['type'])
+          .toSet();
+
+      print('Geometry types: $geometryTypes');
+
+      final firstFeature = features.first;
+
+      final String stateName =
+      firstFeature['properties']['state_name'];
+
+      final List<dynamic> multiPolygon =
+      firstFeature['geometry']['coordinates'];
+
+      print('State: $stateName');
+      print('Polygon count: ${multiPolygon.length}');
+
+      // =========================
+      // 加在这里
+      // =========================
+      final List<LatLng> firstPolygonPoints = [];
+
+      final firstPolygon = multiPolygon.first;
+
+      final outerRing = firstPolygon[0];
+
+      for (final coordinate in outerRing) {
+        final double longitude =
+        coordinate[0].toDouble();
+
+        final double latitude =
+        coordinate[1].toDouble();
+
+        firstPolygonPoints.add(
+          LatLng(
+            latitude,
+            longitude,
+          ),
+        );
+        setState(() {
+          kedahTestPoints = firstPolygonPoints;
+        });
+      }
+
+      print(
+        'First polygon point count: ${firstPolygonPoints.length}',
+      );
+
+      print(
+        'First point: ${firstPolygonPoints.first}',
+      );
+
+    } catch (e) {
+      print('===== GEOJSON ERROR =====');
+      print(e);
+    }
+  }
   @override
   void dispose() {
     startController.dispose();
     destinationController.dispose();
     super.dispose();
   }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -126,10 +216,21 @@ class _HomePageState extends State<HomePage> {
                     'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                     userAgentPackageName: 'com.example.myapp',
                   ),
+                  PolygonLayer(
+                    polygons: [
+                      if (kedahTestPoints.isNotEmpty)
+                        Polygon(
+                          points: kedahTestPoints,
+                          color: Colors.cyan.withValues(alpha: 0.4),
+                          borderColor: Colors.black,
+                          borderStrokeWidth: 2,
+                        ),
+                    ],
+                  ),
                   MarkerLayer(
                       markers:[
                         Marker(
-                            point: LatLng(3.1390, 101.6869),
+                            point: LatLng(3.1390, 101.9758),
                             width:40,
                             height: 40,
                             child:  const Icon(
