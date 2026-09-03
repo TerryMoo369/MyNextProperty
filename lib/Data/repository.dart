@@ -62,12 +62,5 @@ class DataRepository {
   ''');
   }
 
-  Future<List<Map<String, dynamic>>> testPopulationTable() async {
-    return await _dbHelper.rawQuery('''
-    SELECT *
-    FROM population
-    LIMIT 5
-  ''');
-  }
 
 }
