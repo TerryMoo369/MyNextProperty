@@ -134,8 +134,15 @@ class _SearchScreenState extends State<SearchScreen> {
                 controller: _controller,
                 autofocus: true,
                 onChanged: _onSearchChanged,
+                onSubmitted: (value) {
+                  final location = value.trim();
+
+                  if (location.isNotEmpty) {
+                    _selectLocation(location);
+                  }
+                },
                 decoration: InputDecoration(
-                  hintText: 'Search for a state...',
+                  hintText: 'Search for a location...',
                   hintStyle: TextStyle(color: Colors.grey[500]),
                   filled: true,
                   fillColor: isDark ? const Color(0xFF1C1C1E) : Colors.white,
