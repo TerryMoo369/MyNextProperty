@@ -41,88 +41,60 @@ class _ExplorePanelState extends State<ExplorePanel> {
     final locations = filterProvider.selectedLocations;
 
     return AnimatedSize(
-      duration: const Duration(milliseconds: 500),
+      duration: const Duration(milliseconds: 400),
       curve: Curves.easeOutQuint,
-      alignment: Alignment.topLeft,
+      alignment: Alignment.topRight, // CRITICAL: Forces it to shrink/grow towards the top right
       child: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 300),
-        switchInCurve: Curves.easeOutCubic,
-        switchOutCurve: Curves.easeInCubic,
-        layoutBuilder: (Widget? currentChild, List<Widget> previousChildren) {
-          return Stack(
-            alignment: Alignment.topLeft,
-            children: <Widget>[
-              ...previousChildren,
-              if (currentChild != null) currentChild,
-            ],
-          );
-        },
+        duration: const Duration(milliseconds: 250),
+        // Use a simple Fade instead of the old SlideTransition to prevent weird moving
         transitionBuilder: (Widget child, Animation<double> animation) {
-          return FadeTransition(
-            opacity: animation,
-            child: SlideTransition(
-              position: Tween<Offset>(
-                begin: const Offset(0.0, -0.03),
-                end: Offset.zero,
-              ).animate(animation),
-              child: child,
-            ),
-          );
+          return FadeTransition(opacity: animation, child: child);
         },
         child: _isExpanded
             ? SizedBox(
-          key: const ValueKey('expanded_state'),
-          width: double.infinity,
+          key: const ValueKey('expanded_state'), // Keys are required for AnimatedSwitcher
+          width: 320,
           child: _buildExpandedState(isDark, filterProvider, locations),
         )
             : Container(
           key: const ValueKey('collapsed_state'),
-          child: _buildCollapsedState(isDark),
+          child: _buildCollapsedState(isDark, locations),
         ),
       ),
     );
   }
 
-  Widget _buildCollapsedState(bool isDark) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 20, top: 12),
-      child: GestureDetector(
-        onTap: () => setState(() => _isExpanded = true),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
-            borderRadius: BorderRadius.circular(30),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.12),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
+  Widget _buildCollapsedState(bool isDark, List<String> locations) {
+    return GestureDetector(
+      onTap: () => setState(() => _isExpanded = true),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1C1C1E).withOpacity(0.9) : Colors.white.withOpacity(0.95),
+          borderRadius: BorderRadius.circular(30),
+          border: Border.all(color: isDark ? Colors.white10 : Colors.black12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.12),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.tune, color: Color(0xFF0A84FF), size: 18),
+            const SizedBox(width: 8),
+            Text(
+              locations.isEmpty ? 'Explore' : '${locations.length} Locations',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : Colors.black,
               ),
-            ],
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: const BoxDecoration(
-                  color: Color(0xFF0A84FF),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.explore, color: Colors.white, size: 16),
-              ),
-              const SizedBox(width: 10),
-              Text(
-                'Explore',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : Colors.black,
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
