@@ -24,23 +24,22 @@ class DataRepository {
   Future<List<Map<String, dynamic>>> getEconomyMetrics(List<String> states) async {
     if (states.isEmpty) return [];
     return await _dbHelper.rawQuery('''
-      SELECT s.state_name, 
-             AVG(e.cpi_index) as cpi,
-             AVG(e.income_mean) as mean_income,
-             AVG(e.income_median) as median_income,
-             AVG(e.expenditure_mean) as expenditure,
-             AVG(e.poverty_rate) as poverty_rate,
-             AVG(e.gini_coefficient) as gini_coefficient,
-             AVG(e.gdp_value) as gdp,
-             SUM(e.labour_force) as labour_force,
-             AVG(e.participation_rate) as participation_rate,
-             AVG(e.unemployment_rate) as unemployment
-      FROM economy e
-      JOIN state s ON e.state_id = s.id
-      WHERE s.state_name IN (${_getPlaceholders(states.length)})
-        AND e.date = (SELECT MAX(date) FROM economy)
-      GROUP BY s.state_name
-    ''', states);
+    SELECT s.state_name, 
+           MAX(e.cpi_index) as cpi,
+           MAX(e.income_mean) as mean_income,
+           MAX(e.income_median) as median_income,
+           MAX(e.expenditure_mean) as expenditure,
+           MAX(e.poverty_rate) as poverty_rate,
+           MAX(e.gini_coefficient) as gini_coefficient,
+           MAX(e.gdp_value) as gdp,
+           MAX(e.labour_force) as labour_force,
+           MAX(e.participation_rate) as participation_rate,
+           MAX(e.unemployment_rate) as unemployment
+    FROM economy e
+    JOIN state s ON e.state_id = s.id
+    WHERE s.state_name IN (${_getPlaceholders(states.length)})
+    GROUP BY s.state_name
+  ''', states);
   }
 
   // CRIME
