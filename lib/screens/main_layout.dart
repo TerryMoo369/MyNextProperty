@@ -6,6 +6,7 @@ import 'search_screen.dart';
 import 'global/header.dart';
 import 'global/navigation.dart';
 import '../widgets/explore_panel.dart';
+import '../pages/map_view/map_view.dart';
 
 class MainLayout extends StatefulWidget {
   const MainLayout({super.key});
@@ -18,7 +19,7 @@ class _MainLayoutState extends State<MainLayout> {
   int _currentIndex = 0;
 
   final List<Widget> _screens = const [
-    Center(child: Text('Map View')),
+    MapView(),
     ListViewScreen(),
     Center(child: Text('Graph View')),
   ];
