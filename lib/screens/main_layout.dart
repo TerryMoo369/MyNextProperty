@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/search_filter_provider.dart';
+import 'list_view/list_view_screen.dart';
 import 'search_screen.dart';
 import 'global/header.dart';
 import 'global/navigation.dart';
@@ -17,9 +18,9 @@ class _MainLayoutState extends State<MainLayout> {
   int _currentIndex = 0;
 
   final List<Widget> _screens = const [
-    Center(child: Text('Map View Placeholder')),
-    Center(child: Text('List View Placeholder')),
-    Center(child: Text('Graph View Placeholder')),
+    Center(child: Text('Map View')),
+    ListViewScreen(),
+    Center(child: Text('Graph View')),
   ];
 
   void _onTabSelected(int index) {
@@ -54,17 +55,20 @@ class _MainLayoutState extends State<MainLayout> {
             children: _screens,
           ),
           SafeArea(
-            child: Align(
-              alignment: Alignment.topLeft,
-              child: ExplorePanel(
-                onSearchTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const SearchScreen(),
-                    ),
-                  );
-                },
+            child: Padding(
+              padding: const EdgeInsets.only(top: 12, right: 20),
+              child: Align(
+                alignment: Alignment.topRight,
+                child: ExplorePanel(
+                  onSearchTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const SearchScreen(),
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
           ),
