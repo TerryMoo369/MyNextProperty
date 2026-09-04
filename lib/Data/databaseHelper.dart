@@ -21,23 +21,23 @@ class DatabaseHelper {
       version: 1,
       onCreate: (db, version) async {
         final batch = db.batch();
-
         final sqlFiles = [
           'assets/sql/state.sql',
           'assets/sql/population.sql',
-          'assets/sql/economy.sql',
           'assets/sql/crime.sql',
+          'assets/sql/drug_crime.sql',
+          'assets/sql/economy.sql',
           'assets/sql/fuelprice.sql',
-          'assets/sql/state_finance.sql',
+          'assets/sql/healthcare.sql',
+          'assets/sql/education.sql',
           'assets/sql/utilities.sql',
-          'assets/sql/transport.sql',
+          'assets/sql/environment.sql',
         ];
 
         for (String file in sqlFiles) {
           final sqlScript = await rootBundle.loadString(file);
           batch.execute(sqlScript);
         }
-
         await batch.commit(noResult: true);
       },
     );
