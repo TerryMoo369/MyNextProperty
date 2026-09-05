@@ -6,6 +6,7 @@ import 'package:syncfusion_flutter_charts/charts.dart';
 import '../../providers/search_filter_provider.dart';
 import '../../Data/repository.dart';
 import '../../widgets/list_view/location_map_card.dart';
+import '../widgets/list_view/location_selector.dart';
 
 enum GraphMode { bar, pie }
 
@@ -29,6 +30,7 @@ class _GraphViewScreenState extends State<GraphViewScreen> {
 
   bool _isLoading = false;
   int _loadedLocations = 0;
+  GraphMode _mode = GraphMode.bar;
 
   @override
   void initState() {
@@ -165,27 +167,50 @@ class _GraphViewScreenState extends State<GraphViewScreen> {
           );
         }
 
-        List<SfCartesianChart> barCharts = [];
+        List<StatefulWidget> charts = [];
 
         for (var filter in provider.activeFilters) {
-          barCharts.add(
-            SfCartesianChart(
-              title: ChartTitle(text: filter),
-              primaryXAxis: CategoryAxis(title: AxisTitle(text: "States")),
-              tooltipBehavior: _tooltipBehavior,
-              series: [
-                ColumnSeries<MapEntry<String, double>, String>(
-                  name: "States",
-                  dataSource: _categoryStats[filter]?.entries.toList() ?? [],
-                  xValueMapper: (item, _) => item.key,
-                  yValueMapper: (item, _) => item.value,
-                  pointColorMapper: (_, i) =>
-                      ListViewHelpers.getColorForIndex(i),
-                  selectionBehavior: _selectionBehavior,
-                ),
-              ],
-            ),
-          );
+          if (_mode == GraphMode.bar) {
+            charts.add(
+              SfCartesianChart(
+                title: ChartTitle(text: filter),
+                primaryXAxis: CategoryAxis(title: AxisTitle(text: "States")),
+                tooltipBehavior: _tooltipBehavior,
+                series: [
+                  ColumnSeries<MapEntry<String, double>, String>(
+                    name: "States",
+                    dataSource: _categoryStats[filter]?.entries.toList() ?? [],
+                    xValueMapper: (item, _) => item.key,
+                    yValueMapper: (item, _) => item.value,
+                    pointColorMapper: (_, i) =>
+                        ListViewHelpers.getColorForIndex(i),
+                    selectionBehavior: _selectionBehavior,
+                  ),
+                ],
+              ),
+            );
+          } else if (_mode == GraphMode.pie) {
+            charts.add(
+                SfCircularChart(
+                    title: ChartTitle(text: filter),
+                    tooltipBehavior: _tooltipBehavior,
+                    legend: Legend(isVisible: true),
+                    series: [
+                      PieSeries<MapEntry<String, double>, String>(
+                        dataSource: _categoryStats[filter]?.entries.toList() ?? [],
+                        xValueMapper: (item, _) => item.key,
+                        yValueMapper: (item, _) => item.value,
+                        pointColorMapper: (_, i) =>
+                            ListViewHelpers.getColorForIndex(i),
+                        selectionBehavior: _selectionBehavior,
+                        dataLabelSettings: DataLabelSettings(
+                            isVisible: true
+                        )
+                      )
+                    ]
+                )
+            );
+          }
         }
 
         return ListView(
@@ -213,7 +238,21 @@ class _GraphViewScreenState extends State<GraphViewScreen> {
             ),
             if (locations.isNotEmpty) ...[
               const SizedBox(height: 20),
-              ...barCharts,
+              LocationSelector(
+                isDark: isDark,
+                locations: ["Bar Chart", "Pie Chart"],
+                selectedLocation: _mode == GraphMode.pie ? "Pie Chart" : "Bar Chart",
+                onLocationSelected: (mode) => setState(() {
+                  if (mode == "Bar Chart") {
+                    _mode = GraphMode.bar;
+                  }
+                  else if (mode == "Pie Chart") {
+                    _mode = GraphMode.pie;
+                  }
+                }),
+              ),
+              const SizedBox(height: 20),
+              ...charts,
             ],
           ],
         );
