@@ -20,12 +20,15 @@ class MapView extends StatefulWidget {
 
 class _MapViewState extends State<MapView> {
   List<Polygon> statePolygons = [];
+
   //Use to get the destination
   LatLng? startPoint;
 
   double? ron95Price;
 
   String? startStateName;
+
+  List<dynamic>? _cachedGeoJsonFeatures;
 
   final Map<String, LatLng> destinationPoints = {};
 
@@ -46,6 +49,9 @@ class _MapViewState extends State<MapView> {
   final DataRepository _repository = DataRepository();
 
   String? _lastProcessedLocation;
+  int processingCount = 0;
+  bool get isProcessingMap =>
+      processingCount > 0;
 
 
   @override
@@ -54,7 +60,6 @@ class _MapViewState extends State<MapView> {
 
     _loadStatePolygons();
   }
-
   String _normalizeStateName(String stateName) {
     final String name = stateName.toLowerCase().trim();
 
@@ -127,6 +132,92 @@ class _MapViewState extends State<MapView> {
     return stateName;
   }
 
+  Future<List<dynamic>> _getGeoJsonFeatures() async {
+    if (_cachedGeoJsonFeatures != null) {
+      return _cachedGeoJsonFeatures!;
+    }
+
+    final String jsonString = await rootBundle.loadString(
+      'assets/geo/malaysia_states.geojson',
+    );
+
+    final Map<String, dynamic> geoJson =
+    jsonDecode(jsonString);
+
+    _cachedGeoJsonFeatures =
+    geoJson['features'] as List<dynamic>;
+
+    return _cachedGeoJsonFeatures!;
+  }
+
+  Future<String?> _findStateFromPoint(LatLng point) async {
+    final List<dynamic> features =
+    await _getGeoJsonFeatures();
+
+    for (final feature in features) {
+      final String stateName =
+      feature['properties']['state_name'];
+
+      final List<dynamic> multiPolygon =
+      feature['geometry']['coordinates'];
+
+      for (final polygon in multiPolygon) {
+        final List<dynamic> outerRing = polygon[0];
+
+        if (_isPointInsidePolygon(
+          point,
+          outerRing,
+        )) {
+          return stateName;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  bool _isPointInsidePolygon(
+      LatLng point,
+      List<dynamic> polygon,
+      ) {
+    bool inside = false;
+
+    final double x = point.longitude;
+    final double y = point.latitude;
+
+    int j = polygon.length - 1;
+
+    for (int i = 0; i < polygon.length; i++) {
+      final double xi =
+      polygon[i][0].toDouble();
+
+      final double yi =
+      polygon[i][1].toDouble();
+
+      final double xj =
+      polygon[j][0].toDouble();
+
+      final double yj =
+      polygon[j][1].toDouble();
+
+      final bool intersect =
+          ((yi > y) != (yj > y)) &&
+              (x <
+                  (xj - xi) *
+                      (y - yi) /
+                      (yj - yi) +
+                      xi);
+
+      if (intersect) {
+        inside = !inside;
+      }
+
+      j = i;
+    }
+
+    return inside;
+  }
+
 
   void _updateSelectedStates() {
     selectedStateNames.clear();
@@ -145,6 +236,11 @@ class _MapViewState extends State<MapView> {
 
   Future<void> _loadLocationFromProvider(String locationName) async {
     try {
+      if (mounted) {
+        setState(() {
+          processingCount++;
+        });
+      }
       final List<Location> locations =
       await _geocoding.locationFromAddress(locationName);
 
@@ -155,31 +251,23 @@ class _MapViewState extends State<MapView> {
 
       final Location location = locations.first;
 
-      final List<Placemark> placemarks =
-      await _geocoding.placemarkFromCoordinates(
+      final LatLng point = LatLng(
         location.latitude,
         location.longitude,
       );
 
-      if (placemarks.isEmpty) {
-        print('Provider state not found');
+      final String? stateName =
+      await _findStateFromPoint(point);
+
+      if (stateName == null) {
+        print('Provider state not found from GeoJSON');
         return;
       }
-
-      final String rawStateName =
-          placemarks.first.administrativeArea ?? '';
-
-      final String stateName =
-      _normalizeStateName(rawStateName);
 
       if (!mounted) return;
 
       setState(() {
-        startPoint = LatLng(
-          location.latitude,
-          location.longitude,
-        );
-
+        startPoint = point;
         startStateName = stateName;
 
         _updateSelectedStates();
@@ -192,16 +280,33 @@ class _MapViewState extends State<MapView> {
       print('Point: $startPoint');
 
       await _loadStatePolygons();
+      for (final entry in destinationPoints.entries) {
+        await _loadRouteForDestination(
+          entry.key,
+          entry.value,
+        );
+      }
     } catch (e) {
       print('===== PROVIDER LOCATION ERROR =====');
       print(e);
+    } finally {
+      if (mounted) {
+        setState(() {
+          if (processingCount > 0) {
+            processingCount--;
+          }
+        });
+      }
     }
   }
 
-  Future<void> _loadDestinationFromProvider(
-      String locationName,
-      ) async {
+  Future<void> _loadDestinationFromProvider(String locationName,) async {
     try {
+      if (mounted) {
+        setState(() {
+          processingCount++;
+        });
+      }
       final List<Location> locations =
       await _geocoding.locationFromAddress(locationName);
 
@@ -212,31 +317,27 @@ class _MapViewState extends State<MapView> {
 
       final Location location = locations.first;
 
-      final List<Placemark> placemarks =
-      await _geocoding.placemarkFromCoordinates(
+      final LatLng point = LatLng(
         location.latitude,
         location.longitude,
       );
 
-      if (placemarks.isEmpty) {
-        print('Destination state not found: $locationName');
+      final String? stateName =
+      await _findStateFromPoint(point);
+
+      if (stateName == null) {
+        print(
+          'Destination state not found from GeoJSON: $locationName',
+        );
         return;
       }
-
-      final String stateName =
-          placemarks.first.administrativeArea ?? '';
 
       if (!mounted) return;
 
       setState(() {
-        destinationPoints[locationName] = LatLng(
-          location.latitude,
-          location.longitude,
-        );
+        destinationPoints[locationName] = point;
 
         destinationStates[locationName] = stateName;
-
-        _processedDestinations.add(locationName);
 
         _updateSelectedStates();
       });
@@ -248,19 +349,26 @@ class _MapViewState extends State<MapView> {
 
       await _loadStatePolygons();
 
+
       await _loadRouteForDestination(
-          locationName,
-          destinationPoints[locationName]!,);
+        locationName,
+          point,);
     } catch (e) {
       print('===== DESTINATION ERROR =====');
       print(e);
+    } finally {
+      if (mounted) {
+        setState(() {
+          if (processingCount > 0) {
+            processingCount--;
+          }
+        });
+      }
     }
   }
 
-  Future<void> _loadRouteForDestination(
-      String destinationName,
-      LatLng destination,
-      ) async {
+  Future<void> _loadRouteForDestination(String destinationName,
+      LatLng destination,) async {
     if (startPoint == null) {
       return;
     }
@@ -327,15 +435,8 @@ class _MapViewState extends State<MapView> {
 
   Future<void> _loadStatePolygons() async {
     try {
-      final String jsonString = await rootBundle.loadString(
-        'assets/geo/malaysia_states.geojson',
-      );
-
-      final Map<String, dynamic> geoJson =
-      jsonDecode(jsonString);
-
       final List<dynamic> features =
-      geoJson['features'];
+      await _getGeoJsonFeatures();
 
       final populationData =
       await _repository.getMapPopulationData();
@@ -517,6 +618,9 @@ class _MapViewState extends State<MapView> {
 
       for (final destination in destinations) {
         if (!_processedDestinations.contains(destination)) {
+
+          _processedDestinations.add(destination);
+
           WidgetsBinding.instance.addPostFrameCallback((_) {
             _loadDestinationFromProvider(destination);
           });
@@ -524,251 +628,124 @@ class _MapViewState extends State<MapView> {
       }
     }
     return SafeArea(
-        child: Column(
-          children: [
+      child: Column(
+        children: [
+          Expanded(
+            child: Stack(
+              children: [
 
-            // =========================
-            // Search Area
-            // =========================
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                12,
-                10,
-                12,
-                6,
-              ),
-              child: Column(
-                children: [
-
-                ],
-              ),
-            ),
-
-            // =========================
-            // Filter Area
-            // =========================
-            SizedBox(
-              height: 45,
-
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                ),
-
-                children: [
-
-                  IconButton(
-                    onPressed: () {},
-                    icon: const Icon(
-                      Icons.tune,
-                      size: 20,
+                FlutterMap(
+                  options: const MapOptions(
+                    initialCenter: LatLng(4.2105, 101.9758),
+                    initialZoom: 6,
+                  ),
+                  children: [
+                    TileLayer(
+                      urlTemplate:
+                      'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                      userAgentPackageName: 'com.example.myapp',
                     ),
-                  ),
 
-                  _buildFilterButton(
-                    text: 'Sort by',
-                    showArrow: true,
-                  ),
+                    PolygonLayer(
+                      polygons: statePolygons,
+                    ),
 
-                  const SizedBox(width: 8),
-
-                  _buildFilterButton(
-                    text: 'Open now',
-                  ),
-
-                  const SizedBox(width: 8),
-
-                  _buildFilterButton(
-                    text: 'Top rated',
-                  ),
-
-                  const SizedBox(width: 8),
-
-                  _buildFilterButton(
-                    text: 'Wheelchair',
-                  ),
-                ],
-              ),
-            ),
-
-            // =========================
-            // Map Area
-            // =========================
-            Expanded(
-              child: FlutterMap(
-                options: const MapOptions(
-                  initialCenter: LatLng(4.2105, 101.9758),
-                  initialZoom: 6,
-                ),
-                children: [
-                  TileLayer(
-                    urlTemplate:
-                    'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                    userAgentPackageName: 'com.example.myapp',
-                  ),
-
-                  PolygonLayer(
-                    polygons: statePolygons,
-                  ),
-
-                  PolylineLayer(
-                    polylines: destinationRoutes.values
-                        .map(
-                          (points) => Polyline(
-                        points: points,
-                        strokeWidth: 4,
-                        color: Colors.deepOrange,
-                      ),
-                    )
-                        .toList(),
-                  ),
-
-                  MarkerLayer(
-                    markers: [
-
-                      // Source
-                      if (startPoint != null)
-                        Marker(
-                          point: startPoint!,
-                          width: 45,
-                          height: 45,
-                          child: const Icon(
-                            Icons.location_on,
-                            color: Colors.green,
-                            size: 45,
-                          ),
+                    PolylineLayer(
+                      polylines: destinationRoutes.values
+                          .map(
+                            (points) => Polyline(
+                          points: points,
+                          strokeWidth: 4,
+                          color: Colors.deepOrange,
                         ),
-                      // Multiple Destinations
-                      ...destinationPoints.entries.map(
-                            (entry) {
-                          return Marker(
-                            point: entry.value,
+                      )
+                          .toList(),
+                    ),
+
+                    MarkerLayer(
+                      markers: [
+                        // Source
+                        if (startPoint != null)
+                          Marker(
+                            point: startPoint!,
                             width: 45,
                             height: 45,
                             child: const Icon(
                               Icons.location_on,
-                              color: Colors.red,
+                              color: Colors.green,
                               size: 45,
                             ),
-                          );
-                        },
+                          ),
+                        // Multiple Destinations
+                        ...destinationPoints.entries.map(
+                              (entry) {
+                            return Marker(
+                              point: entry.value,
+                              width: 45,
+                              height: 45,
+                              child: const Icon(
+                                Icons.location_on,
+                                color: Colors.red,
+                                size: 45,
+                              ),
+                            );
+                          },
+                        )
+                      ],
+                    ),
+                  ],
+                ),
+
+                // Processing notification
+                if (isProcessingMap)
+                  Positioned(
+                    top: 80,
+                    left: 20,
+                    right: 20,
+                    child: Center(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.black87,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Colors.black26,
+                              blurRadius: 6,
+                            ),
+                          ],
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            ),
+                            SizedBox(width: 10),
+                            Text(
+                              'Processing route...',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ],
+                    ),
                   ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      );
-  }
-
-  // ============================================================
-  // Search Bar
-  // ============================================================
-
-  Widget _buildSearchBar({
-    required TextEditingController controller,
-    VoidCallback? onSearch,
-    VoidCallback? onClear,
-  }) {
-    return SizedBox(
-      height: 42,
-
-      child: TextField(
-        controller: controller,
-
-        textInputAction: TextInputAction.search,
-
-        onSubmitted: (value) {
-          if (onSearch != null) {
-            onSearch();
-          }
-        },
-
-        decoration: InputDecoration(
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 14,
-          ),
-
-          suffixIcon: IconButton(
-            icon: const Icon(
-              Icons.close,
-              size: 18,
-            ),
-
-            onPressed: () {
-              if (onClear != null) {
-                onClear();
-              } else {
-                controller.clear();
-              }
-            },
-          ),
-
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(22),
-
-            borderSide: BorderSide(
-              color: Colors.grey.shade400,
+              ],
             ),
           ),
-
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(22),
-
-            borderSide: BorderSide(
-              color: Colors.grey.shade400,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  // ============================================================
-  // Filter Button
-  // ============================================================
-
-  Widget _buildFilterButton({
-    required String text,
-    bool showArrow = false,
-  }) {
-    return OutlinedButton(
-      onPressed: () {},
-
-      style: OutlinedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(
-          horizontal: 12,
-        ),
-
-        minimumSize: const Size(
-          0,
-          32,
-        ),
-
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-      ),
-
-      child: Row(
-        children: [
-
-          Text(
-            text,
-            style: const TextStyle(
-              fontSize: 11,
-            ),
-          ),
-
-          if (showArrow)
-            const Icon(
-              Icons.arrow_drop_down,
-              size: 16,
-            ),
         ],
       ),
     );
