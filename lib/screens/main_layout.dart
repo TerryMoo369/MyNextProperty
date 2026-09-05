@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mynextproperty/screens/graph_view.dart';
 import 'package:provider/provider.dart';
 import '../providers/search_filter_provider.dart';
 import 'list_view/list_view_screen.dart';
@@ -21,7 +22,7 @@ class _MainLayoutState extends State<MainLayout> {
   final List<Widget> _screens = const [
     MapView(),
     ListViewScreen(),
-    Center(child: Text('Graph View')),
+    GraphViewScreen(),
   ];
 
   void _onTabSelected(int index) {
