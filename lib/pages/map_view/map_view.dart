@@ -59,7 +59,6 @@ class _MapViewState extends State<MapView> {
   @override
   void initState() {
     super.initState();
-    _testFuelPrice();
   }
   String _normalizeStateName(String stateName) {
     final String name = stateName.toLowerCase().trim();
@@ -133,17 +132,6 @@ class _MapViewState extends State<MapView> {
     return stateName;
   }
 
-  Future<void> _testFuelPrice() async {
-    try {
-      final result = await _repository.getFuelPrice();
-
-      print('===== CALL FUEL PRICE =====');
-      print(result);
-    } catch (e) {
-      print('===== FUEL PRICE CALL ERROR =====');
-      print(e);
-    }
-  }
 
   Future<List<dynamic>> _getGeoJsonFeatures() async {
     if (_cachedGeoJsonFeatures != null) {
