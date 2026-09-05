@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // Added for Haptic Feedback
 import 'package:provider/provider.dart';
 import '../providers/search_filter_provider.dart';
 
@@ -61,10 +62,24 @@ class FilterBottomSheet extends StatelessWidget {
           color: sheetBgColor,
           child: Column(
             children: [
-              // TOP HEADER BAR
+              // DRAG HANDLE
+              Center(
+                child: Container(
+                  margin: const EdgeInsets.only(top: 12),
+                  width: 40,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.white24 : Colors.black26,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+
+              // TOP HEADER BAR (Cleaned up)
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 20, 16, 12),
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
                 child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     // Circular Close Button
                     GestureDetector(
@@ -78,29 +93,6 @@ class FilterBottomSheet extends StatelessWidget {
                         child: Icon(Icons.close, size: 20, color: isDark ? Colors.white : Colors.black),
                       ),
                     ),
-                    const SizedBox(width: 12),
-
-                    // Pill Reset Button
-                    GestureDetector(
-                      onTap: () => filterProvider.resetFilters(),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: isDark ? const Color(0xFF2C2C2E) : Colors.grey.shade300,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          'Reset',
-                          style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: isDark ? Colors.white : Colors.black
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    const Spacer(),
 
                     // Title
                     Text(
@@ -111,8 +103,6 @@ class FilterBottomSheet extends StatelessWidget {
                         color: isDark ? Colors.white : Colors.black,
                       ),
                     ),
-
-                    const Spacer(),
 
                     // Done Button
                     GestureDetector(
@@ -137,12 +127,67 @@ class FilterBottomSheet extends StatelessWidget {
                 ),
               ),
 
+              // ACTION BUTTONS (Reset & Select All)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _buildActionButton(
+                        label: 'Reset',
+                        icon: Icons.refresh,
+                        isDark: isDark,
+                        isPrimary: false,
+                        onTap: () {
+                          HapticFeedback.lightImpact();
+                          filterProvider.resetFilters();
+                        },
+                      ),
+                    ),
+                    if (!filterProvider.isMapView) ...[
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _buildActionButton(
+                          label: 'Select All',
+                          icon: Icons.checklist,
+                          isDark: isDark,
+                          isPrimary: true,
+                          onTap: () {
+                            HapticFeedback.mediumImpact();
+                            filterProvider.selectAllFilters();
+                          },
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+
+              // MAP VIEW WARNING BANNER
               if (filterProvider.isMapView)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8.0),
-                  child: Text(
-                    'Map View allows only one filter selection',
-                    style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+                Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF0A84FF).withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFF0A84FF).withOpacity(0.3)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.info_outline, color: Color(0xFF0A84FF), size: 20),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'Map View allows only one filter selection at a time for visual clarity.',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: isDark ? Colors.blue.shade200 : Colors.blue.shade800,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
 
@@ -204,16 +249,62 @@ class FilterBottomSheet extends StatelessWidget {
     );
   }
 
+  // Stylish Action Buttons for Reset / Select All
+  Widget _buildActionButton({
+    required String label,
+    required IconData icon,
+    required bool isDark,
+    required bool isPrimary,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: isPrimary
+              ? const Color(0xFF0A84FF).withOpacity(0.15)
+              : (isDark ? const Color(0xFF2C2C2E) : Colors.grey.shade300),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 18,
+              color: isPrimary
+                  ? const Color(0xFF0A84FF)
+                  : (isDark ? Colors.white : Colors.black),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: isPrimary
+                    ? const Color(0xFF0A84FF)
+                    : (isDark ? Colors.white : Colors.black),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   // Section Header Text
   Widget _buildSectionHeader(String title) {
     return Padding(
       padding: const EdgeInsets.only(left: 12, bottom: 8),
       child: Text(
-        title,
-        style: const TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-          color: Colors.grey,
+        title.toUpperCase(),
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 0.5,
+          color: Colors.grey.shade500,
         ),
       ),
     );
@@ -231,6 +322,13 @@ class FilterBottomSheet extends StatelessWidget {
       decoration: BoxDecoration(
         color: cardColor,
         borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          )
+        ],
       ),
       child: Column(
         children: List.generate(filters.length, (index) {
@@ -241,28 +339,45 @@ class FilterBottomSheet extends StatelessWidget {
           return Column(
             children: [
               ListTile(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-                leading: Icon(
-                  _getIconForFilter(filter),
-                  color: isDark ? Colors.grey.shade400 : Colors.grey.shade700,
-                  size: 22,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? const Color(0xFF0A84FF).withOpacity(0.15)
+                        : (isDark ? Colors.white10 : Colors.black.withOpacity(0.05)),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    _getIconForFilter(filter),
+                    color: isSelected
+                        ? const Color(0xFF0A84FF)
+                        : (isDark ? Colors.grey.shade400 : Colors.grey.shade600),
+                    size: 20,
+                  ),
                 ),
                 title: Text(
                   filter,
                   style: TextStyle(
                     fontSize: 16,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                     color: isDark ? Colors.white : Colors.black,
                   ),
                 ),
-                trailing: isSelected
-                    ? const Icon(Icons.check, color: Color(0xFF0A84FF), size: 24)
-                    : const SizedBox.shrink(), // Hides checkmark if unselected
-                onTap: () => provider.toggleFilter(filter),
+                trailing: AnimatedScale(
+                  scale: isSelected ? 1.0 : 0.0,
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.easeOutBack,
+                  child: const Icon(Icons.check_circle, color: Color(0xFF0A84FF), size: 24),
+                ),
+                onTap: () {
+                  HapticFeedback.selectionClick();
+                  provider.toggleFilter(filter);
+                },
               ),
               if (!isLast)
                 Padding(
-                  padding: const EdgeInsets.only(left: 52), // Align divider with text
+                  padding: const EdgeInsets.only(left: 60), // Align divider perfectly with text
                   child: Divider(
                     height: 1,
                     thickness: 0.5,
