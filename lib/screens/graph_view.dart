@@ -31,6 +31,7 @@ class _GraphViewScreenState extends State<GraphViewScreen> {
   bool _isLoading = false;
   int _loadedLocations = 0;
   GraphMode _mode = GraphMode.bar;
+  Map<String, int> _states = {};
 
   @override
   void initState() {
@@ -149,6 +150,10 @@ class _GraphViewScreenState extends State<GraphViewScreen> {
         _categoryStats = temp;
         _isLoading = false;
         _loadedLocations = states.length;
+        _states = {
+          for (int i = 0; i < states.length; i++)
+            states[i]: i
+        };
       });
     }
   }
@@ -170,6 +175,8 @@ class _GraphViewScreenState extends State<GraphViewScreen> {
         List<StatefulWidget> charts = [];
 
         for (var filter in provider.activeFilters) {
+          List<MapEntry<String, double>> data = _categoryStats[filter]?.entries.toList() ?? [];
+          data.sort((a, b) => _states[a.key]!.compareTo(_states[b.key]!));
           if (_mode == GraphMode.bar) {
             charts.add(
               SfCartesianChart(
@@ -179,7 +186,7 @@ class _GraphViewScreenState extends State<GraphViewScreen> {
                 series: [
                   ColumnSeries<MapEntry<String, double>, String>(
                     name: "States",
-                    dataSource: _categoryStats[filter]?.entries.toList() ?? [],
+                    dataSource: data,
                     xValueMapper: (item, _) => item.key,
                     yValueMapper: (item, _) => item.value,
                     pointColorMapper: (_, i) =>
@@ -197,7 +204,7 @@ class _GraphViewScreenState extends State<GraphViewScreen> {
                     legend: Legend(isVisible: true),
                     series: [
                       PieSeries<MapEntry<String, double>, String>(
-                        dataSource: _categoryStats[filter]?.entries.toList() ?? [],
+                        dataSource: data,
                         xValueMapper: (item, _) => item.key,
                         yValueMapper: (item, _) => item.value,
                         pointColorMapper: (_, i) =>
