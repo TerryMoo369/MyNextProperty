@@ -75,4 +75,40 @@ class DatabaseHelper {
     final db = await database;
     return await db.rawQuery(sql, arguments);
   }
+
+  void batchUpsert(
+      Batch batch, {
+        required String table,
+        required Map<String, dynamic> data,
+        required List<String> conflictColumns,
+      }) {
+    if (data.isEmpty) return;
+
+    final columns = data.keys.join(', ');
+    final placeholders = List.filled(data.length, '?').join(', ');
+    final conflictColsString = conflictColumns.join(', ');
+
+    final updateColumns = data.keys
+        .where((key) => !conflictColumns.contains(key))
+        .map((key) => '$key = excluded.$key')
+        .join(', ');
+
+    String sql;
+    if (updateColumns.isEmpty) {
+      sql = '''
+        INSERT INTO $table ($columns)
+        VALUES ($placeholders)
+        ON CONFLICT($conflictColsString) DO NOTHING;
+      ''';
+    } else {
+      // Standard UPSERT
+      sql = '''
+        INSERT INTO $table ($columns)
+        VALUES ($placeholders)
+        ON CONFLICT($conflictColsString) DO UPDATE SET $updateColumns;
+      ''';
+    }
+
+    batch.rawInsert(sql, data.values.toList());
+  }
 }

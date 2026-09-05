@@ -123,14 +123,42 @@ class DataRepository {
     ''', states);
   }
 
-  // SEARCH SUGGESTIONS
+  // SEARCH SUGGESTIONS (States and Districts)
   Future<List<String>> searchLocations(String query) async {
-    if (query.trim().isEmpty) return [];
+    final cleanQuery = query.trim();
+    if (cleanQuery.isEmpty) return [];
+
+    final String likeQuery = '%$cleanQuery%';
+    final List<String> results = [];
+
+    // 1. Search for States
     final stateResults = await _dbHelper.rawQuery(
-        "SELECT state_name FROM state WHERE state_name LIKE ? LIMIT 10",
-        ['%${query.trim()}%']
+      "SELECT state_name FROM state WHERE state_name LIKE ? LIMIT 5",
+      [likeQuery],
     );
-    return stateResults.map((row) => row['state_name'] as String).toList();
+    results.addAll(stateResults.map((row) => row['state_name'] as String));
+
+    // 2. Search for Districts (Mapped to their respective state)
+    final districtResults = await _dbHelper.rawQuery('''
+      SELECT DISTINCT e.district, s.state_name
+      FROM economy e
+      JOIN state s ON e.state_id = s.id
+      WHERE e.district LIKE ?
+      LIMIT 10
+    ''', [likeQuery]);
+
+    for (var row in districtResults) {
+      final dist = row['district'] as String?;
+      final state = row['state_name'] as String?;
+      if (dist != null && dist.isNotEmpty && state != null && state.isNotEmpty) {
+        final locName = '$dist, $state';
+        if (!results.contains(locName)) {
+          results.add(locName);
+        }
+      }
+    }
+
+    return results.take(10).toList();
   }
 
   Future<List<Map<String, dynamic>>> getMapPopulationData() async {

@@ -58,22 +58,19 @@ class _MainLayoutState extends State<MainLayout> {
               children: _screens,
             ),
           ),
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.only(top: 12, right: 20),
-              child: Align(
-                alignment: Alignment.topRight,
-                child: ExplorePanel(
-                  onSearchTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const SearchScreen(),
-                      ),
-                    );
-                  },
-                ),
-              ),
+          Positioned(
+            top: MediaQuery.of(context).padding.top + kToolbarHeight,
+            left: 0,
+            right: 0,
+            child: ExplorePanel(
+              onSearchTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const SearchScreen(),
+                  ),
+                );
+              },
             ),
           ),
           Positioned(

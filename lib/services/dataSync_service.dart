@@ -27,9 +27,10 @@ class DataSyncService {
       // 1. Population State
         case Dataset.POPULATION_STATE:
           if (stateId != null) {
-            batch.insert(
-              'population',
-              {
+            _dbHelper.batchUpsert(
+              batch,
+              table: 'population',
+              data: {
                 'state_id': stateId,
                 'date': item['date'],
                 'sex': item['sex'],
@@ -37,7 +38,7 @@ class DataSyncService {
                 'ethnicity': item['ethnicity'],
                 'population_000': (item['population'] as num?)?.toDouble() ?? 0.0,
               },
-              conflictAlgorithm: ConflictAlgorithm.replace,
+              conflictColumns: ['state_id', 'date', 'sex', 'age', 'ethnicity'],
             );
           }
           break;
@@ -45,15 +46,16 @@ class DataSyncService {
       // 2. CPI State
         case Dataset.CPI_STATE:
           if (stateId != null) {
-            batch.insert(
-              'economy',
-              {
+            _dbHelper.batchUpsert(
+              batch,
+              table: 'economy',
+              data: {
                 'state_id': stateId,
                 'date': item['date'],
                 'cpi_division': item['division']?.toString(),
                 'cpi_index': (item['index'] as num?)?.toDouble(),
               },
-              conflictAlgorithm: ConflictAlgorithm.replace,
+              conflictColumns: ['state_id', 'date', 'district', 'cpi_division', 'gdp_sector'],
             );
           }
           break;
@@ -61,9 +63,10 @@ class DataSyncService {
       // 3. Crime District
         case Dataset.CRIME_DISTRICT:
           if (stateId != null) {
-            batch.insert(
-              'crime',
-              {
+            _dbHelper.batchUpsert(
+              batch,
+              table: 'crime',
+              data: {
                 'state_id': stateId,
                 'date': item['date'],
                 'district': item['district']?.toString(),
@@ -71,7 +74,7 @@ class DataSyncService {
                 'crime_type': item['type'] ?? 'all',
                 'cases': (item['crimes'] as num?)?.toInt() ?? 0,
               },
-              conflictAlgorithm: ConflictAlgorithm.replace,
+              conflictColumns: ['state_id', 'date', 'district', 'crime_category', 'crime_type'],
             );
           }
           break;
@@ -79,25 +82,27 @@ class DataSyncService {
       // 4. Household Income District
         case Dataset.HH_INCOME_DISTRICT:
           if (stateId != null) {
-            batch.insert(
-              'economy',
-              {
+            _dbHelper.batchUpsert(
+              batch,
+              table: 'economy',
+              data: {
                 'state_id': stateId,
                 'date': item['date'],
                 'district': item['district']?.toString(),
                 'income_mean': (item['income_mean'] as num?)?.toDouble(),
                 'income_median': (item['income_median'] as num?)?.toDouble(),
               },
-              conflictAlgorithm: ConflictAlgorithm.replace,
+              conflictColumns: ['state_id', 'date', 'district', 'cpi_division', 'gdp_sector'],
             );
           }
           break;
 
       // 5. Fuel Price (National)
         case Dataset.FUELPRICE:
-          batch.insert(
-            'fuelprice',
-            {
+          _dbHelper.batchUpsert(
+            batch,
+            table: 'fuelprice',
+            data: {
               'date': item['date'],
               'ron95': (item['ron95'] as num?)?.toDouble(),
               'ron97': (item['ron97'] as num?)?.toDouble(),
@@ -105,23 +110,25 @@ class DataSyncService {
               'diesel_eastmsia': (item['diesel_eastmsia'] as num?)?.toDouble(),
               'series_type': item['series_type']?.toString(),
             },
-            conflictAlgorithm: ConflictAlgorithm.replace,
+            conflictColumns: ['date', 'series_type'],
           );
           break;
 
       // 6. Hospital Beds
         case Dataset.HOSPITAL_BEDS:
           if (stateId != null) {
-            batch.insert(
-              'healthcare',
-              {
+            _dbHelper.batchUpsert(
+              batch,
+              table: 'healthcare',
+              data: {
                 'state_id': stateId,
                 'date': item['date'],
                 'district': item['district']?.toString(),
                 'hospital_type': item['type']?.toString(),
                 'beds': (item['beds'] as num?)?.toInt() ?? 0,
               },
-              conflictAlgorithm: ConflictAlgorithm.replace,
+              // UPDATE HERE: Added staff_type to match SQL
+              conflictColumns: ['date', 'state_id', 'district', 'hospital_type', 'staff_type'],
             );
           }
           break;
@@ -129,15 +136,17 @@ class DataSyncService {
       // 7. Healthcare Staff
         case Dataset.HEALTHCARE_STAFF:
           if (stateId != null) {
-            batch.insert(
-              'healthcare',
-              {
+            _dbHelper.batchUpsert(
+              batch,
+              table: 'healthcare',
+              data: {
                 'state_id': stateId,
                 'date': item['date'],
                 'staff_type': item['type']?.toString(),
                 'staff_count': (item['staff'] as num?)?.toInt() ?? 0,
               },
-              conflictAlgorithm: ConflictAlgorithm.replace,
+              // UPDATE HERE: Added district and hospital_type to match SQL
+              conflictColumns: ['date', 'state_id', 'district', 'hospital_type', 'staff_type'],
             );
           }
           break;
@@ -145,9 +154,10 @@ class DataSyncService {
       // 8. Drug Addicts by Drug Type
         case Dataset.DRUG_ADDICTS_DRUGTYPE:
           if (stateId != null) {
-            batch.insert(
-              'drug_crime',
-              {
+            _dbHelper.batchUpsert(
+              batch,
+              table: 'drug_crime',
+              data: {
                 'state_id': stateId,
                 'date': item['date'],
                 'total': (item['total'] as num?)?.toInt() ?? 0,
@@ -158,7 +168,7 @@ class DataSyncService {
                 'psychotropic_pill': (item['psychotropic pill'] as num?)?.toInt() ?? 0,
                 'others': (item['others'] as num?)?.toInt() ?? 0,
               },
-              conflictAlgorithm: ConflictAlgorithm.replace,
+              conflictColumns: ['state_id', 'date'],
             );
           }
           break;
@@ -166,9 +176,10 @@ class DataSyncService {
       // 9. Teachers in District
         case Dataset.TEACHERS_DISTRICT:
           if (stateId != null) {
-            batch.insert(
-              'education',
-              {
+            _dbHelper.batchUpsert(
+              batch,
+              table: 'education',
+              data: {
                 'state_id': stateId,
                 'date': item['date'],
                 'district': item['district']?.toString(),
@@ -176,7 +187,7 @@ class DataSyncService {
                 'sex': item['sex']?.toString(),
                 'teachers_count': (item['teachers'] as num?)?.toInt() ?? 0,
               },
-              conflictAlgorithm: ConflictAlgorithm.replace,
+              conflictColumns: ['state_id', 'date', 'district', 'stage', 'sex'],
             );
           }
           break;
@@ -184,15 +195,16 @@ class DataSyncService {
       // 10. SDG 04-6-1: Literacy & Numeracy
         case Dataset.SDG_04_6_1:
           if (stateId != null) {
-            batch.insert(
-              'education',
-              {
+            _dbHelper.batchUpsert(
+              batch,
+              table: 'education',
+              data: {
                 'state_id': stateId,
                 'date': item['date'],
                 'sex': item['sex']?.toString(),
                 'literacy_proportion': (item['proportion'] as num?)?.toDouble() ?? 0.0,
               },
-              conflictAlgorithm: ConflictAlgorithm.replace,
+              conflictColumns: ['state_id', 'date', 'district', 'stage', 'sex'],
             );
           }
           break;
@@ -200,9 +212,10 @@ class DataSyncService {
       // 11. HIES: Household Income, Expenditure & Poverty
         case Dataset.HIES_DISTRICT:
           if (stateId != null) {
-            batch.insert(
-              'economy',
-              {
+            _dbHelper.batchUpsert(
+              batch,
+              table: 'economy',
+              data: {
                 'state_id': stateId,
                 'date': item['date'],
                 'district': item['district']?.toString(),
@@ -212,7 +225,7 @@ class DataSyncService {
                 'income_median': (item['income_median'] as num?)?.toDouble(),
                 'expenditure_mean': (item['expenditure_mean'] as num?)?.toDouble(),
               },
-              conflictAlgorithm: ConflictAlgorithm.replace,
+              conflictColumns: ['state_id', 'date', 'district', 'cpi_division', 'gdp_sector'],
             );
           }
           break;
@@ -220,9 +233,10 @@ class DataSyncService {
       // 12. Labour Force Statistics
         case Dataset.LFS_DISTRICT:
           if (stateId != null) {
-            batch.insert(
-              'economy',
-              {
+            _dbHelper.batchUpsert(
+              batch,
+              table: 'economy',
+              data: {
                 'state_id': stateId,
                 'date': item['date'],
                 'district': item['district']?.toString(),
@@ -230,7 +244,7 @@ class DataSyncService {
                 'participation_rate': (item['p_rate'] as num?)?.toDouble(),
                 'unemployment_rate': (item['u_rate'] as num?)?.toDouble(),
               },
-              conflictAlgorithm: ConflictAlgorithm.replace,
+              conflictColumns: ['state_id', 'date', 'district', 'cpi_division', 'gdp_sector'],
             );
           }
           break;
@@ -238,14 +252,15 @@ class DataSyncService {
       // 13. Forest Reserve Area
         case Dataset.FOREST_RESERVE_STATE:
           if (stateId != null) {
-            batch.insert(
-              'environment',
-              {
+            _dbHelper.batchUpsert(
+              batch,
+              table: 'environment',
+              data: {
                 'state_id': stateId,
                 'date': item['date'],
                 'forest_reserve_area': (item['area'] as num?)?.toDouble() ?? 0.0,
               },
-              conflictAlgorithm: ConflictAlgorithm.replace,
+              conflictColumns: ['state_id', 'date'],
             );
           }
           break;
@@ -253,16 +268,17 @@ class DataSyncService {
       // 14. Real GDP District
         case Dataset.GDP_DISTRICT_REAL_SUPPLY:
           if (stateId != null) {
-            batch.insert(
-              'economy',
-              {
+            _dbHelper.batchUpsert(
+              batch,
+              table: 'economy',
+              data: {
                 'state_id': stateId,
                 'date': item['date'],
                 'district': item['district']?.toString(),
                 'gdp_value': (item['value'] as num?)?.toDouble(),
                 'gdp_sector': item['sector']?.toString(),
               },
-              conflictAlgorithm: ConflictAlgorithm.replace,
+              conflictColumns: ['state_id', 'date', 'district', 'cpi_division', 'gdp_sector'],
             );
           }
           break;
@@ -270,9 +286,10 @@ class DataSyncService {
       // 15. Basic Amenities Access
         case Dataset.HH_ACCESS_AMENITIES:
           if (stateId != null) {
-            batch.insert(
-              'utilities',
-              {
+            _dbHelper.batchUpsert(
+              batch,
+              table: 'utilities',
+              data: {
                 'state_id': stateId,
                 'date': item['date'],
                 'district': item['district']?.toString(),
@@ -280,7 +297,7 @@ class DataSyncService {
                 'piped_water': (item['piped_water'] as num?)?.toDouble(),
                 'sanitation': (item['sanitation'] as num?)?.toDouble(),
               },
-              conflictAlgorithm: ConflictAlgorithm.replace,
+              conflictColumns: ['state_id', 'date', 'district'],
             );
           }
           break;

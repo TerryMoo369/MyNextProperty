@@ -27,7 +27,7 @@ class _ExplorePanelState extends State<ExplorePanel> {
         return const Icon(Icons.square, color: Color(0xFFFF9F0A), size: 16);
       case 2:
         return const Icon(Icons.change_history, color: Color(0xFF30D158), size: 18);
-      case 3: // Added a 4th shape indicator just in case
+      case 3:
         return const Icon(Icons.star, color: Color(0xFFBF5AF2), size: 18);
       default:
         return const Icon(Icons.location_on, color: Colors.grey, size: 16);
@@ -53,12 +53,16 @@ class _ExplorePanelState extends State<ExplorePanel> {
         child: _isExpanded
             ? SizedBox(
           key: const ValueKey('expanded_state'), // Keys are required for AnimatedSwitcher
-          width: 320,
+          width: double.infinity,
           child: _buildExpandedState(isDark, filterProvider, locations),
         )
-            : Container(
+            : Align(
           key: const ValueKey('collapsed_state'),
-          child: _buildCollapsedState(isDark, locations),
+          alignment: Alignment.topRight,
+          child: Padding(
+            padding: const EdgeInsets.only(top: 12, right: 20),
+            child: _buildCollapsedState(isDark, locations),
+          ),
         ),
       ),
     );
@@ -102,11 +106,12 @@ class _ExplorePanelState extends State<ExplorePanel> {
 
   Widget _buildExpandedState(bool isDark, SearchFilterProvider filterProvider, List<String> locations) {
     return ClipRRect(
+      borderRadius: const BorderRadius.vertical(bottom: Radius.circular(24)),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
         child: Container(
           width: double.infinity,
-          padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
           decoration: BoxDecoration(
             color: isDark ? Colors.black.withOpacity(0.80) : Colors.white.withOpacity(0.85),
             border: Border(
@@ -187,7 +192,6 @@ class _ExplorePanelState extends State<ExplorePanel> {
                         ),
                       );
                     }),
-
                     // --- ONLY SHOW IF LESS THAN 4 LOCATIONS ---
                     if (locations.length < 4)
                       GestureDetector(

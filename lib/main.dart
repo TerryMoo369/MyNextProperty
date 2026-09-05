@@ -20,7 +20,7 @@ Future<void> main() async {
   // Trigger Background API Sync
   // DO NOT 'await' this. It runs silently in the background.
   final syncService = DataSyncService();
-  syncService.syncAllBackground();
+  await syncService.syncAllBackground();
 
   runApp(const MyApp());
 }
