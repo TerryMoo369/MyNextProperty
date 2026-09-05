@@ -7,5 +7,5 @@ CREATE TABLE IF NOT EXISTS education (
     sex TEXT,
     teachers_count INTEGER,
     literacy_proportion REAL,
-    UNIQUE(date, state_id, district)
+    UNIQUE(date, state_id, district, stage, sex)
 );

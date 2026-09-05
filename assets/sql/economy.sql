@@ -15,5 +15,5 @@ CREATE TABLE IF NOT EXISTS economy (
     labour_force REAL,
     participation_rate REAL,
     unemployment_rate REAL,
-    UNIQUE(date, state_id, district)
+    UNIQUE(date, state_id, district, cpi_division, gdp_sector)
 );

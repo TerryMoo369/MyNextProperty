@@ -6,5 +6,5 @@ CREATE TABLE IF NOT EXISTS population (
     age TEXT,
     ethnicity TEXT,
     population_000 REAL,
-    UNIQUE(date, state_id)
+    UNIQUE(date, state_id, sex, age, ethnicity)
 );

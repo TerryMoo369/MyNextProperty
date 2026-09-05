@@ -7,5 +7,5 @@ CREATE TABLE IF NOT EXISTS healthcare (
     beds INTEGER,
     staff_type TEXT,
     staff_count INTEGER,
-    UNIQUE(date, state_id, district)
+    UNIQUE(date, state_id, district, hospital_type, staff_type)
 );

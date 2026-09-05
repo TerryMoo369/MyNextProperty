@@ -6,5 +6,5 @@ CREATE TABLE IF NOT EXISTS fuelprice (
     diesel REAL,
     diesel_eastmsia REAL,
     series_type TEXT,
-    UNIQUE(date)
+    UNIQUE(date, series_type)
 );

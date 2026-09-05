@@ -6,5 +6,5 @@ CREATE TABLE IF NOT EXISTS crime (
     crime_category TEXT NOT NULL,
     crime_type TEXT,
     cases INTEGER NOT NULL,
-    UNIQUE(date, state_id, district)
+    UNIQUE(date, state_id, district, crime_category, crime_type)
 );
