@@ -20,7 +20,6 @@ class MapView extends StatefulWidget {
 
 class _MapViewState extends State<MapView> {
   List<Polygon> statePolygons = [];
-
   //Use to get the destination
   LatLng? startPoint;
 
@@ -49,6 +48,9 @@ class _MapViewState extends State<MapView> {
   final DataRepository _repository = DataRepository();
 
   String? _lastProcessedLocation;
+  String? _lastProcessedFilter;
+
+  Map<String, double> _currentFilterValues = {};
   int processingCount = 0;
   bool get isProcessingMap =>
       processingCount > 0;
@@ -57,8 +59,6 @@ class _MapViewState extends State<MapView> {
   @override
   void initState() {
     super.initState();
-
-    _loadStatePolygons();
   }
   String _normalizeStateName(String stateName) {
     final String name = stateName.toLowerCase().trim();
@@ -433,41 +433,201 @@ class _MapViewState extends State<MapView> {
     }
   }
 
+  Future<void> _loadFilterData(String filter) async {
+    try {
+      final features = await _getGeoJsonFeatures();
+
+      // Get all Malaysia states from GeoJSON
+      final List<String> states = features
+          .map<String>(
+            (feature) =>
+            feature['properties']['state_name'].toString(),
+      )
+          .toList();
+
+      List<Map<String, dynamic>> rows = [];
+      String valueColumn = '';
+
+      switch (filter) {
+
+      // =========================
+      // Population
+      // =========================
+        case 'Total Population':
+          rows = await _repository.getPopulation(states);
+          valueColumn = 'total_population';
+          break;
+
+      // =========================
+      // Economy
+      // =========================
+        case 'Cost of Living (CPI)':
+          rows = await _repository.getEconomyMetrics(states);
+          valueColumn = 'cpi';
+          break;
+
+        case 'Mean Income':
+          rows = await _repository.getEconomyMetrics(states);
+          valueColumn = 'mean_income';
+          break;
+
+        case 'Median Income':
+          rows = await _repository.getEconomyMetrics(states);
+          valueColumn = 'median_income';
+          break;
+
+        case 'Expenditure':
+          rows = await _repository.getEconomyMetrics(states);
+          valueColumn = 'expenditure';
+          break;
+
+        case 'Poverty Rate':
+          rows = await _repository.getEconomyMetrics(states);
+          valueColumn = 'poverty_rate';
+          break;
+
+        case 'Income Inequality':
+          rows = await _repository.getEconomyMetrics(states);
+          valueColumn = 'gini_coefficient';
+          break;
+
+        case 'GDP':
+          rows = await _repository.getEconomyMetrics(states);
+          valueColumn = 'gdp';
+          break;
+
+        case 'Labour Force':
+          rows = await _repository.getEconomyMetrics(states);
+          valueColumn = 'labour_force';
+          break;
+
+        case 'Workforce Participation':
+          rows = await _repository.getEconomyMetrics(states);
+          valueColumn = 'participation_rate';
+          break;
+
+        case 'Unemployment Rate':
+          rows = await _repository.getEconomyMetrics(states);
+          valueColumn = 'unemployment';
+          break;
+
+      // =========================
+      // Crime
+      // =========================
+        case 'General Crime':
+          rows = await _repository.getCrime(states);
+          valueColumn = 'total_crimes';
+          break;
+
+        case 'Drug Crime':
+          rows = await _repository.getDrugCrime(states);
+          valueColumn = 'total_drug_cases';
+          break;
+
+      // =========================
+      // Healthcare
+      // =========================
+        case 'Hospital Beds':
+          rows = await _repository.getHealthcare(states);
+          valueColumn = 'total_beds';
+          break;
+
+        case 'Healthcare Staff':
+          rows = await _repository.getHealthcare(states);
+          valueColumn = 'total_staff';
+          break;
+
+      // =========================
+      // Education
+      // =========================
+        case 'Teachers':
+          rows = await _repository.getEducation(states);
+          valueColumn = 'total_teachers';
+          break;
+
+        case 'Literacy Rate':
+          rows = await _repository.getEducation(states);
+          valueColumn = 'literacy_rate';
+          break;
+
+      // =========================
+      // Utilities
+      // =========================
+        case 'Electricity Access':
+          rows = await _repository.getUtilities(states);
+          valueColumn = 'electricity_access';
+          break;
+
+        case 'Water Access':
+          rows = await _repository.getUtilities(states);
+          valueColumn = 'water_access';
+          break;
+
+        case 'Sanitation':
+          rows = await _repository.getUtilities(states);
+          valueColumn = 'sanitation_access';
+          break;
+
+      // =========================
+      // Environment
+      // =========================
+        case 'Green Space':
+          rows = await _repository.getEnvironment(states);
+          valueColumn = 'green_space_area';
+          break;
+
+        default:
+          print('Unknown map filter: $filter');
+          return;
+      }
+
+      final Map<String, double> values = {};
+
+      for (final row in rows) {
+        final dynamic rawValue = row[valueColumn];
+
+        if (rawValue != null) {
+          values[row['state_name'].toString()] =
+              (rawValue as num).toDouble();
+        }
+      }
+
+      _currentFilterValues = values;
+
+      print('===== MAP FILTER =====');
+      print('Filter: $filter');
+      print('Column: $valueColumn');
+      print('Values: $_currentFilterValues');
+
+      await _loadStatePolygons();
+    } catch (e) {
+      print('===== FILTER ERROR =====');
+      print('Filter: $filter');
+      print(e);
+    }
+  }
+
   Future<void> _loadStatePolygons() async {
     try {
       final List<dynamic> features =
       await _getGeoJsonFeatures();
 
-      final populationData =
-      await _repository.getMapPopulationData();
+      final Map<String, double> valueByState =
+          _currentFilterValues;
 
-      final Map<String, double> populationByState = {};
-
-      for (final row in populationData) {
-        final String stateName =
-        row['state_name'].toString();
-
-        final double population =
-        (row['population_000'] as num).toDouble();
-
-        populationByState[stateName] = population;
+      if (valueByState.isEmpty) {
+        return;
       }
 
-      final double minPopulation =
-      populationByState.values.reduce(
+      final double minValue =
+      valueByState.values.reduce(
             (a, b) => a < b ? a : b,
       );
 
-      final double maxPopulation =
-      populationByState.values.reduce(
+      final double maxValue =
+      valueByState.values.reduce(
             (a, b) => a > b ? a : b,
       );
-
-      print('Min Population: $minPopulation');
-      print('Max Population: $maxPopulation');
-
-      print('===== DATABASE + GEOJSON =====');
-      print(populationByState);
 
       final List<Polygon> polygons = [];
 
@@ -478,15 +638,16 @@ class _MapViewState extends State<MapView> {
         final bool isSelected =
         selectedStateNames.contains(stateName);
 
-        final double? population =
-        populationByState[stateName];
+        final double? value =
+        valueByState[stateName];
 
         double normalizedValue = 0;
 
-        if (population != null) {
+        if (value != null &&
+            maxValue != minValue) {
           normalizedValue =
-              (population - minPopulation) /
-                  (maxPopulation - minPopulation);
+              (value - minValue) /
+                  (maxValue - minValue);
         }
 
         final List<dynamic> multiPolygon =
@@ -523,7 +684,7 @@ class _MapViewState extends State<MapView> {
               borderStrokeWidth:
               isSelected ? 3 : 1,
               label: stateName,
-              color: population == null
+              color: value == null
                   ? Colors.grey.withValues(alpha: 0.4)
                   : Color.lerp(
                 Colors.cyan,
@@ -551,6 +712,17 @@ class _MapViewState extends State<MapView> {
 
     final selectedLocations =
         filterProvider.selectedLocations;
+
+    final String selectedFilter =
+        filterProvider.activeFilters.first;
+
+    if (_lastProcessedFilter != selectedFilter) {
+      _lastProcessedFilter = selectedFilter;
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _loadFilterData(selectedFilter);
+      });
+    }
 
     if (selectedLocations.isEmpty && startPoint != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
