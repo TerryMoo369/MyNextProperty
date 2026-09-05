@@ -120,6 +120,13 @@ class SearchFilterProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void selectAllFilters() {
+    if (isMapView) return;
+    _activeFilters = List.from(availableFilters);
+    _saveFilters();
+    notifyListeners();
+  }
+
   // Persistence methods
   Future<void> _loadSavedPreferences() async {
     final prefs = await SharedPreferences.getInstance();
