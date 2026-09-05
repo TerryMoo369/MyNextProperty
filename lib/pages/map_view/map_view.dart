@@ -59,6 +59,7 @@ class _MapViewState extends State<MapView> {
   @override
   void initState() {
     super.initState();
+    _testFuelPrice();
   }
   String _normalizeStateName(String stateName) {
     final String name = stateName.toLowerCase().trim();
@@ -130,6 +131,18 @@ class _MapViewState extends State<MapView> {
     }
 
     return stateName;
+  }
+
+  Future<void> _testFuelPrice() async {
+    try {
+      final result = await _repository.getFuelPrice();
+
+      print('===== CALL FUEL PRICE =====');
+      print(result);
+    } catch (e) {
+      print('===== FUEL PRICE CALL ERROR =====');
+      print(e);
+    }
   }
 
   Future<List<dynamic>> _getGeoJsonFeatures() async {
@@ -704,7 +717,119 @@ class _MapViewState extends State<MapView> {
       print(e);
     }
   }
+  Widget _buildMapLegend(
+      String selectedFilter,
+      bool isDark,
+      ) {
+    return Container(
+      width: 180,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: isDark
+            ? Colors.black.withOpacity(0.85)
+            : Colors.white.withOpacity(0.92),
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.15),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text(
+            'Map Filter',
+            style: TextStyle(
+              fontSize: 11,
+              color: Colors.grey,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
 
+          const SizedBox(height: 3),
+
+          Text(
+            selectedFilter,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: isDark
+                  ? Colors.white
+                  : Colors.black,
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          // Color gradient
+          Container(
+            height: 10,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(5),
+              gradient: const LinearGradient(
+                colors: [
+                  Colors.cyan,
+                  Colors.red,
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 5),
+
+          const Row(
+            mainAxisAlignment:
+            MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Low',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Colors.grey,
+                ),
+              ),
+              Text(
+                'High',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Colors.grey,
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 10),
+
+          Row(
+            children: [
+              Container(
+                width: 18,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFC107),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(width: 7),
+              const Expanded(
+                child: Text(
+                  'Selected state',
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: Colors.grey,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
   @override
   Widget build(BuildContext context) {
     final filterProvider =
@@ -715,6 +840,10 @@ class _MapViewState extends State<MapView> {
 
     final String selectedFilter =
         filterProvider.activeFilters.first;
+
+    final bool isDark =
+        Theme.of(context).brightness ==
+            Brightness.dark;
 
     if (_lastProcessedFilter != selectedFilter) {
       _lastProcessedFilter = selectedFilter;
@@ -866,6 +995,15 @@ class _MapViewState extends State<MapView> {
                       ],
                     ),
                   ],
+                ),
+              // Map Filter Legend
+                Positioned(
+                  left: 16,
+                  bottom: 120,
+                  child: _buildMapLegend(
+                    selectedFilter,
+                    isDark,
+                  ),
                 ),
 
                 // Processing notification
