@@ -79,16 +79,31 @@ class _SearchScreenState extends State<SearchScreen> {
 
     String finalLocationName = location;
 
-    // Only geocode if it's a typed district, not a known state suggestion
+    // Only geocode if it's a typed query not directly chosen from database suggestions
     if (!_suggestions.contains(location)) {
       final stateName = await GeoLocationService().getStateFromAddress(location);
 
-      if (stateName != null && !location.toLowerCase().contains(stateName.toLowerCase())) {
+      // Validation check: Location must resolve within Malaysia's GeoJSON boundaries
+      if (stateName == null) {
+        if (mounted) {
+          scaffoldMessenger.showSnackBar(
+            const SnackBar(
+              content: Text('Invalid location or outside Malaysia. Please select a valid state or district.'),
+              behavior: SnackBarBehavior.floating,
+              backgroundColor: Colors.redAccent,
+            ),
+          );
+          setState(() => _isResolvingLocation = false); // unlock UI
+        }
+        return;
+      }
+
+      if (!location.toLowerCase().contains(stateName.toLowerCase())) {
         finalLocationName = '$location, $stateName';
       }
     }
 
-    // 2. Ensure widget hasn't been closed during the await gap
+    // 2. Ensure widget hasn't been closed during the async resolution
     if (!mounted) return;
 
     if (provider.selectedLocations.contains(finalLocationName)) {
@@ -239,7 +254,7 @@ class _SearchScreenState extends State<SearchScreen> {
     if (_suggestions.isEmpty) {
       return Center(
         child: Text(
-          'No states found.',
+          'No locations found.',
           style: TextStyle(color: Colors.grey[600]),
         ),
       );
