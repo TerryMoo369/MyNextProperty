@@ -51,9 +51,11 @@ class _MainLayoutState extends State<MainLayout> {
       appBar: const AppHeader(),
       body: Stack(
         children: [
-          IndexedStack(
-            index: _currentIndex,
-            children: _screens,
+          Positioned.fill(
+            child: IndexedStack(
+              index: _currentIndex,
+              children: _screens,
+            ),
           ),
           SafeArea(
             child: Padding(
