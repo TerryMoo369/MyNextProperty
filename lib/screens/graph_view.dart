@@ -229,7 +229,7 @@ class _GraphViewScreenState extends State<GraphViewScreen> {
           ),
           children: [
             Text(
-              'Location Score',
+              'Location Graph',
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
