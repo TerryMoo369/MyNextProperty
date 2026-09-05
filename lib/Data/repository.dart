@@ -158,5 +158,15 @@ class DataRepository {
   ''');
   }
 
+  Future<List<Map<String, dynamic>>> getFuelPrice() async {
+    return await _dbHelper.rawQuery('''
+      SELECT MAX(date) "date", SUM(ron95) "Ron 95", SUM(ron97)"Ron 97", SUM(diesel)"Diesel", SUM(diesel_eastmsia)
+      FROM fuelprice
+      WHERE date >= (SELECT MAX(date)
+                     FROM fuelprice
+                     WHERE series_type = 'level');
+    ''');
 
+
+  }
 }
