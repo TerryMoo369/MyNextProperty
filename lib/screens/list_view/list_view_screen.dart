@@ -16,12 +16,10 @@ class ListViewScreen extends StatefulWidget {
 
 class _ListViewScreenState extends State<ListViewScreen> {
   final DataRepository _repository = DataRepository();
-
-  Map<String, Map<String, double>> _rawDatabaseData = {}; // db values
-  Map<String, Map<String, String>> _formattedData = {};   // Format UI values
-  Map<String, Map<String, double>> _indicatorScores = {}; // 1-10 Scores per metric
-  Map<String, double> _overallScores = {};                // Average of all active metrics
-
+  Map<String, Map<String, double>> _rawDatabaseData = {};
+  Map<String, Map<String, String>> _formattedData = {};
+  Map<String, Map<String, double>> _indicatorScores = {};
+  Map<String, double> _overallScores = {};
   bool _isLoading = false;
   String? _selectedBreakdownLocation;
 
@@ -30,19 +28,16 @@ class _ListViewScreenState extends State<ListViewScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        // Safely fetch once during init and pass it down
         final provider = Provider.of<SearchFilterProvider>(context, listen: false);
         _fetchData(provider);
       }
     });
   }
 
-  // UPDATED: Require the provider as a direct argument
   Future<void> _fetchData(SearchFilterProvider provider) async {
-    if (!mounted) return; // Immediate safety check
+    if (!mounted) return;
 
     final locations = provider.selectedLocations;
-
     if (locations.isEmpty) {
       if (mounted) {
         setState(() {
@@ -58,7 +53,6 @@ class _ListViewScreenState extends State<ListViewScreen> {
 
     setState(() => _isLoading = true);
 
-    // Normalize location names for database matching
     List<String> dbStates = locations.map((loc) {
       String statePart = loc.contains(',') ? loc.split(',').last.trim() : loc;
       if (loc.contains('Kuala Lumpur')) return 'W.P. Kuala Lumpur';
@@ -70,7 +64,6 @@ class _ListViewScreenState extends State<ListViewScreen> {
       return statePart;
     }).toList();
 
-    // Fetch all datasets concurrently for fast loading
     final results = await Future.wait([
       _repository.getPopulation(dbStates),
       _repository.getEconomyMetrics(dbStates),
@@ -97,22 +90,19 @@ class _ListViewScreenState extends State<ListViewScreen> {
     for (int i = 0; i < locations.length; i++) {
       String rawLoc = locations[i];
       String dbState = dbStates[i];
+
       newData[rawLoc] = {};
       newFormattedData[rawLoc] = {};
 
-      // Helper to safely extract double from the DB maps
       double getVal(List<Map<String, dynamic>> dbList, String column) {
         final row = dbList.firstWhere(
-          // Changed to .contains() to handle API name variations
                 (e) => e['state_name'].toString().contains(dbState),
             orElse: () => {}
         );
         return (row[column] as num?)?.toDouble() ?? 0.0;
       }
 
-      // Map all 21 Indicators to their specific Database Columns
       newData[rawLoc]!['Total Population'] = getVal(pop, 'total_population');
-
       newData[rawLoc]!['Cost of Living (CPI)'] = getVal(econ, 'cpi');
       newData[rawLoc]!['Mean Income'] = getVal(econ, 'mean_income');
       newData[rawLoc]!['Median Income'] = getVal(econ, 'median_income');
@@ -123,23 +113,17 @@ class _ListViewScreenState extends State<ListViewScreen> {
       newData[rawLoc]!['Labour Force'] = getVal(econ, 'labour_force');
       newData[rawLoc]!['Workforce Participation'] = getVal(econ, 'participation_rate');
       newData[rawLoc]!['Unemployment Rate'] = getVal(econ, 'unemployment');
-
       newData[rawLoc]!['General Crime'] = getVal(crime, 'total_crimes');
       newData[rawLoc]!['Drug Crime'] = getVal(drugCrime, 'total_drug_cases');
-
       newData[rawLoc]!['Hospital Beds'] = getVal(health, 'total_beds');
       newData[rawLoc]!['Healthcare Staff'] = getVal(health, 'total_staff');
-
       newData[rawLoc]!['Teachers'] = getVal(education, 'total_teachers');
       newData[rawLoc]!['Literacy Rate'] = getVal(education, 'literacy_rate');
-
       newData[rawLoc]!['Electricity Access'] = getVal(utilities, 'electricity_access');
       newData[rawLoc]!['Water Access'] = getVal(utilities, 'water_access');
       newData[rawLoc]!['Sanitation'] = getVal(utilities, 'sanitation_access');
-
       newData[rawLoc]!['Green Space'] = getVal(environment, 'green_space_area');
 
-      // Format the raw values immediately for the UI
       for(var filter in SearchFilterProvider.availableFilters) {
         double val = newData[rawLoc]![filter] ?? 0.0;
         newFormattedData[rawLoc]![filter] = ScoringService.formatRawData(filter, val);
@@ -148,6 +132,7 @@ class _ListViewScreenState extends State<ListViewScreen> {
 
     _rawDatabaseData = newData;
     _formattedData = newFormattedData;
+
     _calculateScores(provider, locations);
 
     if (_selectedBreakdownLocation == null || !locations.contains(_selectedBreakdownLocation)) {
@@ -161,38 +146,30 @@ class _ListViewScreenState extends State<ListViewScreen> {
     _overallScores.clear();
     _indicatorScores.clear();
 
-    // Setup empty maps
     for (var loc in locations) {
       _indicatorScores[loc] = {};
     }
 
     final activeFilters = provider.activeFilters;
 
-    // Score each metric relatively across all selected locations
     for (var filter in activeFilters) {
-      // Extract the raw values for this specific filter across all locations
       Map<String, double> filterValuesToCompare = {};
       for (var loc in locations) {
         filterValuesToCompare[loc] = _rawDatabaseData[loc]?[filter] ?? 0.0;
       }
-
-      // Delegate to the industrial scoring service
       Map<String, double> normalizedScores = ScoringService.calculateNormalizedScores(filter, filterValuesToCompare);
 
-      // Save the generated scores
       for (var loc in locations) {
         _indicatorScores[loc]![filter] = normalizedScores[loc] ?? 0.0;
       }
     }
 
-    // Calculate the Overall Location Score (Average of all active filter scores)
     for (var loc in locations) {
       double totalScore = 0;
       int count = 0;
-
       for (var filter in activeFilters) {
         double score = _indicatorScores[loc]![filter] ?? 0.0;
-        if (score > 0) { // Only average metrics that actually have data
+        if (score > 0) {
           totalScore += score;
           count++;
         }
@@ -210,7 +187,6 @@ class _ListViewScreenState extends State<ListViewScreen> {
           final locations = provider.selectedLocations;
 
           if (locations.length != _rawDatabaseData.length && !_isLoading) {
-            // UPDATED: Pass the provider directly instead of letting _fetchData look it up
             WidgetsBinding.instance.addPostFrameCallback((_) => _fetchData(provider));
           }
 
