@@ -59,6 +59,7 @@ class _MapViewState extends State<MapView> {
   @override
   void initState() {
     super.initState();
+    _loadFuelPrice();
   }
   String _normalizeStateName(String stateName) {
     final String name = stateName.toLowerCase().trim();
@@ -130,6 +131,83 @@ class _MapViewState extends State<MapView> {
     }
 
     return stateName;
+  }
+  void _calculateAllFuelCosts() {
+    if (ron95Price == null) {
+      return;
+    }
+
+    const double fuelConsumption = 7.0;
+    // 7 litres per 100 km
+
+    final Map<String, double> costs = {};
+
+    for (final entry in destinationDistances.entries) {
+      final String destinationName = entry.key;
+      final double distanceKm = entry.value;
+
+      final double litresUsed =
+          (distanceKm / 100) * fuelConsumption;
+
+      final double fuelCost =
+          litresUsed * ron95Price!;
+
+      costs[destinationName] = fuelCost;
+
+      print('===== FUEL COST =====');
+      print('Destination: $destinationName');
+      print(
+        'Distance: ${distanceKm.toStringAsFixed(2)} km',
+      );
+      print(
+        'Fuel Used: ${litresUsed.toStringAsFixed(2)} L',
+      );
+      print(
+        'Estimated Cost: RM ${fuelCost.toStringAsFixed(2)}',
+      );
+    }
+
+    if (!mounted) return;
+
+    setState(() {
+      destinationFuelCosts
+        ..clear()
+        ..addAll(costs);
+    });
+  }
+
+  Future<void> _loadFuelPrice() async {
+    try {
+      final result =
+      await _repository.getFuelPrice();
+
+      if (result.isEmpty) {
+        print('No fuel price found');
+        return;
+      }
+
+      final row = result.first;
+
+      final double? price =
+      (row['ron95'] as num?)?.toDouble();
+
+      if (price == null) {
+        print('RON95 price unavailable');
+        return;
+      }
+
+      setState(() {
+        ron95Price = price;
+      });
+
+      print('===== RON95 PRICE =====');
+      print('RM $ron95Price / L');
+
+      _calculateAllFuelCosts();
+    } catch (e) {
+      print('===== FUEL PRICE ERROR =====');
+      print(e);
+    }
   }
 
 
@@ -424,6 +502,8 @@ class _MapViewState extends State<MapView> {
         destinationRoutes[destinationName] = points;
         destinationDistances[destinationName] = distanceKm;
       });
+
+      _calculateAllFuelCosts();
 
       print('===== ROUTE =====');
       print('Destination: $destinationName');
@@ -968,18 +1048,72 @@ class _MapViewState extends State<MapView> {
                         // Multiple Destinations
                         ...destinationPoints.entries.map(
                               (entry) {
+                            final String destinationName = entry.key;
+
+                            final double? distance =
+                            destinationDistances[destinationName];
+
+                            final double? fuelCost =
+                            destinationFuelCosts[destinationName];
+
                             return Marker(
                               point: entry.value,
                               width: 45,
                               height: 45,
-                              child: const Icon(
-                                Icons.location_on,
-                                color: Colors.red,
-                                size: 45,
+
+                              child: PopupMenuButton<String>(
+                                padding: EdgeInsets.zero,
+
+                                offset: const Offset(0, -80),
+
+                                itemBuilder: (context) => [
+                                  PopupMenuItem<String>(
+                                    enabled: false,
+                                    child: SizedBox(
+                                      width: 190,
+                                      child: Column(
+                                        crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            destinationName,
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 13,
+                                            ),
+                                          ),
+
+                                          const SizedBox(height: 8),
+
+                                          Text(
+                                            distance != null
+                                                ? 'Distance: ${distance.toStringAsFixed(2)} km'
+                                                : 'Distance: Calculating...',
+                                          ),
+
+                                          const SizedBox(height: 4),
+
+                                          Text(
+                                            fuelCost != null
+                                                ? 'Estimated Fuel: RM ${fuelCost.toStringAsFixed(2)}'
+                                                : 'Fuel Cost: Calculating...',
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+
+                                child: const Icon(
+                                  Icons.location_on,
+                                  color: Colors.red,
+                                  size: 45,
+                                ),
                               ),
                             );
                           },
-                        )
+                        ),
                       ],
                     ),
                   ],
