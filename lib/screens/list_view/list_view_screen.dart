@@ -28,11 +28,19 @@ class _ListViewScreenState extends State<ListViewScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _fetchData());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        // Safely fetch once during init and pass it down
+        final provider = Provider.of<SearchFilterProvider>(context, listen: false);
+        _fetchData(provider);
+      }
+    });
   }
 
-  Future<void> _fetchData() async {
-    final provider = Provider.of<SearchFilterProvider>(context, listen: false);
+  // UPDATED: Require the provider as a direct argument
+  Future<void> _fetchData(SearchFilterProvider provider) async {
+    if (!mounted) return; // Immediate safety check
+
     final locations = provider.selectedLocations;
 
     if (locations.isEmpty) {
@@ -52,13 +60,14 @@ class _ListViewScreenState extends State<ListViewScreen> {
 
     // Normalize location names for database matching
     List<String> dbStates = locations.map((loc) {
+      String statePart = loc.contains(',') ? loc.split(',').last.trim() : loc;
       if (loc.contains('Kuala Lumpur')) return 'W.P. Kuala Lumpur';
       if (loc.contains('Putrajaya')) return 'W.P. Putrajaya';
       if (loc.contains('Labuan')) return 'W.P. Labuan';
       if (loc.contains('Semenanjung Malaysia')) return 'Semenanjung Malaysia';
       if (loc.contains('Kelantan')) return 'Kelantan';
       if (loc.contains('Penang')) return 'Pulau Pinang';
-      return loc.split(',').first;
+      return statePart;
     }).toList();
 
     // Fetch all datasets concurrently for fast loading
@@ -200,12 +209,11 @@ class _ListViewScreenState extends State<ListViewScreen> {
         builder: (context, provider, child) {
           final locations = provider.selectedLocations;
 
-          // Re-fetch data if locations are added/removed from the Explore Panel
           if (locations.length != _rawDatabaseData.length && !_isLoading) {
-            WidgetsBinding.instance.addPostFrameCallback((_) => _fetchData());
+            // UPDATED: Pass the provider directly instead of letting _fetchData look it up
+            WidgetsBinding.instance.addPostFrameCallback((_) => _fetchData(provider));
           }
 
-          // Re-calculate scores dynamically if filters change in the Bottom Sheet
           if (!_isLoading && locations.isNotEmpty) {
             _calculateScores(provider, locations);
           }

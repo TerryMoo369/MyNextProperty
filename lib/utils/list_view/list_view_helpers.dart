@@ -22,14 +22,17 @@ class ListViewHelpers {
   };
 
   static LatLng getCoordinate(String loc) {
-    if (loc.contains('Kuala Lumpur')) return stateCoordinates['Kuala Lumpur']!;
-    if (loc.contains('Putrajaya')) return stateCoordinates['Putrajaya']!;
-    if (loc.contains('Labuan')) return stateCoordinates['Labuan']!;
-    if (loc.contains('Kelantan')) return stateCoordinates['Kelantan']!;
-    if (loc.contains('Penang')) return stateCoordinates['Pulau Pinang']!;
-    // Add a fallback center point for Semenanjung Malaysia
-    if (loc.contains('Semenanjung Malaysia')) return const LatLng(4.2105, 101.9758);
-    return stateCoordinates[loc.split(',').first] ?? const LatLng(4.2105, 101.9758);
+    // UPDATED: Read the state part for fallback centering
+    String statePart = loc.contains(',') ? loc.split(',').last.trim() : loc;
+
+    if (statePart.contains('Kuala Lumpur')) return stateCoordinates['Kuala Lumpur']!;
+    if (statePart.contains('Putrajaya')) return stateCoordinates['Putrajaya']!;
+    if (statePart.contains('Labuan')) return stateCoordinates['Labuan']!;
+    if (statePart.contains('Kelantan')) return stateCoordinates['Kelantan']!;
+    if (statePart.contains('Penang')) return stateCoordinates['Pulau Pinang']!;
+    if (statePart.contains('Semenanjung Malaysia')) return const LatLng(4.2105, 101.9758);
+
+    return stateCoordinates[statePart] ?? const LatLng(4.2105, 101.9758);
   }
 
   static Widget getShapeIndicator(int index) {
