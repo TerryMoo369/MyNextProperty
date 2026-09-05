@@ -1,4 +1,5 @@
 import 'dart:ui';
+
 import 'package:flutter/material.dart';
 
 class CustomBottomNavBar extends StatefulWidget {
@@ -84,7 +85,9 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar> {
                   : Colors.white.withOpacity(0.65),
               borderRadius: BorderRadius.circular(40),
               border: Border.all(
-                color: isDark ? Colors.white.withOpacity(0.15) : Colors.black.withOpacity(0.1),
+                color: isDark
+                    ? Colors.white.withOpacity(0.15)
+                    : Colors.black.withOpacity(0.1),
                 width: 1,
               ),
             ),
@@ -98,7 +101,9 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar> {
                   children: [
                     // Sliding
                     AnimatedPositioned(
-                      duration: _isDragging ? Duration.zero : const Duration(milliseconds: 300),
+                      duration: _isDragging
+                          ? Duration.zero
+                          : const Duration(milliseconds: 300),
                       curve: Curves.easeOutCubic,
                       left: _dragPosition,
                       top: 0,
@@ -106,26 +111,30 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar> {
                       width: _tabWidth,
                       child: Container(
                         decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(30),
-                            gradient: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [
-                                Theme.of(context).primaryColor.withOpacity(0.2),
-                                Theme.of(context).primaryColor.withOpacity(0.05),
-                              ],
+                          borderRadius: BorderRadius.circular(30),
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              Theme.of(context).primaryColor.withOpacity(0.2),
+                              Theme.of(context).primaryColor.withOpacity(0.05),
+                            ],
+                          ),
+                          border: Border.all(
+                            color: Theme.of(
+                              context,
+                            ).primaryColor.withOpacity(0.5),
+                            width: 1.5,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Theme.of(
+                                context,
+                              ).primaryColor.withOpacity(0.15),
+                              blurRadius: 10,
+                              spreadRadius: 1,
                             ),
-                            border: Border.all(
-                              color: Theme.of(context).primaryColor.withOpacity(0.5),
-                              width: 1.5,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Theme.of(context).primaryColor.withOpacity(0.15),
-                                blurRadius: 10,
-                                spreadRadius: 1,
-                              )
-                            ]
+                          ],
                         ),
                       ),
                     ),

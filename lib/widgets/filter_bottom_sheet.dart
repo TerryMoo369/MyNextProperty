@@ -1,7 +1,9 @@
 import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // Added for Haptic Feedback
 import 'package:provider/provider.dart';
+
 import '../providers/search_filter_provider.dart';
 
 class FilterBottomSheet extends StatelessWidget {
@@ -19,28 +21,50 @@ class FilterBottomSheet extends StatelessWidget {
   // Helper method to map indicators to icons
   IconData _getIconForFilter(String filter) {
     switch (filter) {
-      case 'Total Population': return Icons.groups;
-      case 'Cost of Living (CPI)': return Icons.account_balance_wallet;
-      case 'Mean Income': return Icons.attach_money;
-      case 'Median Income': return Icons.money;
-      case 'Expenditure': return Icons.shopping_cart;
-      case 'Poverty Rate': return Icons.trending_down;
-      case 'Income Inequality': return Icons.balance;
-      case 'GDP': return Icons.auto_graph;
-      case 'Labour Force': return Icons.engineering;
-      case 'Workforce Participation': return Icons.work;
-      case 'Unemployment Rate': return Icons.work_off;
-      case 'General Crime': return Icons.local_police;
-      case 'Drug Crime': return Icons.medication_liquid;
-      case 'Hospital Beds': return Icons.bed;
-      case 'Healthcare Staff': return Icons.health_and_safety;
-      case 'Teachers': return Icons.school;
-      case 'Literacy Rate': return Icons.menu_book;
-      case 'Electricity Access': return Icons.bolt;
-      case 'Water Access': return Icons.water_drop;
-      case 'Sanitation': return Icons.cleaning_services;
-      case 'Green Space': return Icons.park;
-      default: return Icons.analytics;
+      case 'Total Population':
+        return Icons.groups;
+      case 'Cost of Living (CPI)':
+        return Icons.account_balance_wallet;
+      case 'Mean Income':
+        return Icons.attach_money;
+      case 'Median Income':
+        return Icons.money;
+      case 'Expenditure':
+        return Icons.shopping_cart;
+      case 'Poverty Rate':
+        return Icons.trending_down;
+      case 'Income Inequality':
+        return Icons.balance;
+      case 'GDP':
+        return Icons.auto_graph;
+      case 'Labour Force':
+        return Icons.engineering;
+      case 'Workforce Participation':
+        return Icons.work;
+      case 'Unemployment Rate':
+        return Icons.work_off;
+      case 'General Crime':
+        return Icons.local_police;
+      case 'Drug Crime':
+        return Icons.medication_liquid;
+      case 'Hospital Beds':
+        return Icons.bed;
+      case 'Healthcare Staff':
+        return Icons.health_and_safety;
+      case 'Teachers':
+        return Icons.school;
+      case 'Literacy Rate':
+        return Icons.menu_book;
+      case 'Electricity Access':
+        return Icons.bolt;
+      case 'Water Access':
+        return Icons.water_drop;
+      case 'Sanitation':
+        return Icons.cleaning_services;
+      case 'Green Space':
+        return Icons.park;
+      default:
+        return Icons.analytics;
     }
   }
 
@@ -49,8 +73,9 @@ class FilterBottomSheet extends StatelessWidget {
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
     final filterProvider = Provider.of<SearchFilterProvider>(context);
 
-    // Background and card colors based on theme
-    final sheetBgColor = isDark ? const Color(0xFF000000).withOpacity(0.85) : const Color(0xFFF2F2F7).withOpacity(0.9);
+    final sheetBgColor = isDark
+        ? const Color(0xFF000000).withOpacity(0.85)
+        : const Color(0xFFF2F2F7).withOpacity(0.9);
     final cardColor = isDark ? const Color(0xFF1C1C1E) : Colors.white;
 
     return ClipRRect(
@@ -58,7 +83,9 @@ class FilterBottomSheet extends StatelessWidget {
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 40, sigmaY: 40),
         child: Container(
-          height: MediaQuery.of(context).size.height * 0.90, // Taller sheet for more content
+          height:
+              MediaQuery.of(context).size.height *
+              0.90, // Taller sheet for more content
           color: sheetBgColor,
           child: Column(
             children: [
@@ -87,10 +114,16 @@ class FilterBottomSheet extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: isDark ? const Color(0xFF2C2C2E) : Colors.grey.shade300,
+                          color: isDark
+                              ? const Color(0xFF2C2C2E)
+                              : Colors.grey.shade300,
                           shape: BoxShape.circle,
                         ),
-                        child: Icon(Icons.close, size: 20, color: isDark ? Colors.white : Colors.black),
+                        child: Icon(
+                          Icons.close,
+                          size: 20,
+                          color: isDark ? Colors.white : Colors.black,
+                        ),
                       ),
                     ),
 
@@ -108,7 +141,10 @@ class FilterBottomSheet extends StatelessWidget {
                     GestureDetector(
                       onTap: () => Navigator.of(context).pop(),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 10,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFF0A84FF), // Vivid iOS Blue
                           borderRadius: BorderRadius.circular(20),
@@ -116,9 +152,9 @@ class FilterBottomSheet extends StatelessWidget {
                         child: const Text(
                           'Done',
                           style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
                           ),
                         ),
                       ),
@@ -129,7 +165,10 @@ class FilterBottomSheet extends StatelessWidget {
 
               // ACTION BUTTONS (Reset & Select All)
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 8,
+                ),
                 child: Row(
                   children: [
                     Expanded(
@@ -166,23 +205,34 @@ class FilterBottomSheet extends StatelessWidget {
               // MAP VIEW WARNING BANNER
               if (filterProvider.isMapView)
                 Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 8,
+                  ),
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: const Color(0xFF0A84FF).withOpacity(0.15),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFF0A84FF).withOpacity(0.3)),
+                    border: Border.all(
+                      color: const Color(0xFF0A84FF).withOpacity(0.3),
+                    ),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.info_outline, color: Color(0xFF0A84FF), size: 20),
+                      const Icon(
+                        Icons.info_outline,
+                        color: Color(0xFF0A84FF),
+                        size: 20,
+                      ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
                           'Map View allows only one filter selection at a time for visual clarity.',
                           style: TextStyle(
                             fontSize: 13,
-                            color: isDark ? Colors.blue.shade200 : Colors.blue.shade800,
+                            color: isDark
+                                ? Colors.blue.shade200
+                                : Colors.blue.shade800,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -194,7 +244,10 @@ class FilterBottomSheet extends StatelessWidget {
               // SCROLLABLE FILTER LIST
               Expanded(
                 child: ListView(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 10,
+                  ),
                   physics: const BouncingScrollPhysics(),
                   children: [
                     _buildSectionHeader('Economic & Wealth'),
@@ -204,9 +257,16 @@ class FilterBottomSheet extends StatelessWidget {
                       isDark: isDark,
                       provider: filterProvider,
                       filters: [
-                        'Cost of Living (CPI)', 'Mean Income', 'Median Income',
-                        'Expenditure', 'Poverty Rate', 'Income Inequality',
-                        'GDP', 'Labour Force', 'Workforce Participation', 'Unemployment Rate'
+                        'Cost of Living (CPI)',
+                        'Mean Income',
+                        'Median Income',
+                        'Expenditure',
+                        'Poverty Rate',
+                        'Income Inequality',
+                        'GDP',
+                        'Labour Force',
+                        'Workforce Participation',
+                        'Unemployment Rate',
                       ],
                     ),
 
@@ -219,7 +279,9 @@ class FilterBottomSheet extends StatelessWidget {
                       isDark: isDark,
                       provider: filterProvider,
                       filters: [
-                        'Total Population', 'General Crime', 'Drug Crime'
+                        'Total Population',
+                        'General Crime',
+                        'Drug Crime',
                       ],
                     ),
 
@@ -232,9 +294,14 @@ class FilterBottomSheet extends StatelessWidget {
                       isDark: isDark,
                       provider: filterProvider,
                       filters: [
-                        'Hospital Beds', 'Healthcare Staff', 'Teachers',
-                        'Literacy Rate', 'Electricity Access', 'Water Access',
-                        'Sanitation', 'Green Space'
+                        'Hospital Beds',
+                        'Healthcare Staff',
+                        'Teachers',
+                        'Literacy Rate',
+                        'Electricity Access',
+                        'Water Access',
+                        'Sanitation',
+                        'Green Space',
                       ],
                     ),
 
@@ -249,7 +316,6 @@ class FilterBottomSheet extends StatelessWidget {
     );
   }
 
-  // Stylish Action Buttons for Reset / Select All
   Widget _buildActionButton({
     required String label,
     required IconData icon,
@@ -294,7 +360,6 @@ class FilterBottomSheet extends StatelessWidget {
     );
   }
 
-  // Section Header Text
   Widget _buildSectionHeader(String title) {
     return Padding(
       padding: const EdgeInsets.only(left: 12, bottom: 8),
@@ -310,7 +375,6 @@ class FilterBottomSheet extends StatelessWidget {
     );
   }
 
-  // Inset Grouped Card containing multiple list items
   Widget _buildGroupedCard({
     required BuildContext context,
     required Color cardColor,
@@ -327,7 +391,7 @@ class FilterBottomSheet extends StatelessWidget {
             color: Colors.black.withOpacity(0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
-          )
+          ),
         ],
       ),
       child: Column(
@@ -339,20 +403,27 @@ class FilterBottomSheet extends StatelessWidget {
           return Column(
             children: [
               ListTile(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 4,
+                ),
                 leading: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
                     color: isSelected
                         ? const Color(0xFF0A84FF).withOpacity(0.15)
-                        : (isDark ? Colors.white10 : Colors.black.withOpacity(0.05)),
+                        : (isDark
+                              ? Colors.white10
+                              : Colors.black.withOpacity(0.05)),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(
                     _getIconForFilter(filter),
                     color: isSelected
                         ? const Color(0xFF0A84FF)
-                        : (isDark ? Colors.grey.shade400 : Colors.grey.shade600),
+                        : (isDark
+                              ? Colors.grey.shade400
+                              : Colors.grey.shade600),
                     size: 20,
                   ),
                 ),
@@ -368,7 +439,11 @@ class FilterBottomSheet extends StatelessWidget {
                   scale: isSelected ? 1.0 : 0.0,
                   duration: const Duration(milliseconds: 200),
                   curve: Curves.easeOutBack,
-                  child: const Icon(Icons.check_circle, color: Color(0xFF0A84FF), size: 24),
+                  child: const Icon(
+                    Icons.check_circle,
+                    color: Color(0xFF0A84FF),
+                    size: 24,
+                  ),
                 ),
                 onTap: () {
                   HapticFeedback.selectionClick();
@@ -377,7 +452,8 @@ class FilterBottomSheet extends StatelessWidget {
               ),
               if (!isLast)
                 Padding(
-                  padding: const EdgeInsets.only(left: 60), // Align divider perfectly with text
+                  padding: const EdgeInsets.only(left: 60),
+                  // Align divider perfectly with text
                   child: Divider(
                     height: 1,
                     thickness: 0.5,

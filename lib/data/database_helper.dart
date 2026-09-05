@@ -4,7 +4,9 @@ import 'package:sqflite/sqflite.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
+
   factory DatabaseHelper() => _instance;
+
   DatabaseHelper._internal();
 
   static Database? _database;
@@ -43,7 +45,6 @@ class DatabaseHelper {
     );
   }
 
-  /// Ensures a state exists in the dimension table and returns its ID
   Future<int> getOrCreateStateId(String stateName) async {
     final db = await database;
     final List<Map<String, dynamic>> result = await db.query(
@@ -57,31 +58,30 @@ class DatabaseHelper {
       return result.first['id'] as int;
     }
 
-    return await db.insert(
-      'state',
-      {'state_name': stateName},
-      conflictAlgorithm: ConflictAlgorithm.ignore,
-    );
+    return await db.insert('state', {
+      'state_name': stateName,
+    }, conflictAlgorithm: ConflictAlgorithm.ignore);
   }
 
-  /// Exposes batch for external transaction management
   Future<Batch> getBatch() async {
     final db = await database;
     return db.batch();
   }
 
-  /// Standard raw query execution for the Repository layer
-  Future<List<Map<String, dynamic>>> rawQuery(String sql, [List<Object?>? arguments]) async {
+  Future<List<Map<String, dynamic>>> rawQuery(
+    String sql, [
+    List<Object?>? arguments,
+  ]) async {
     final db = await database;
     return await db.rawQuery(sql, arguments);
   }
 
   void batchUpsert(
-      Batch batch, {
-        required String table,
-        required Map<String, dynamic> data,
-        required List<String> conflictColumns,
-      }) {
+    Batch batch, {
+    required String table,
+    required Map<String, dynamic> data,
+    required List<String> conflictColumns,
+  }) {
     if (data.isEmpty) return;
 
     final columns = data.keys.join(', ');
@@ -95,14 +95,16 @@ class DatabaseHelper {
 
     String sql;
     if (updateColumns.isEmpty) {
-      sql = '''
+      sql =
+          '''
         INSERT INTO $table ($columns)
         VALUES ($placeholders)
         ON CONFLICT($conflictColsString) DO NOTHING;
       ''';
     } else {
       // Standard UPSERT
-      sql = '''
+      sql =
+          '''
         INSERT INTO $table ($columns)
         VALUES ($placeholders)
         ON CONFLICT($conflictColsString) DO UPDATE SET $updateColumns;

@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:latlong2/latlong.dart';
 
-import '../../utils/list_view/list_view_helpers.dart';
+import 'list_view_helpers.dart';
 
 class LocationMapCard extends StatefulWidget {
   final bool isDark;
@@ -30,7 +29,8 @@ class _LocationMapCardState extends State<LocationMapCard> {
   void didUpdateWidget(LocationMapCard oldWidget) {
     super.didUpdateWidget(oldWidget);
     // Only re-center the map if the list of locations actually changed
-    if (oldWidget.locations != widget.locations || oldWidget.overallScores != widget.overallScores) {
+    if (oldWidget.locations != widget.locations ||
+        oldWidget.overallScores != widget.overallScores) {
       _boundMap();
     }
   }
@@ -39,18 +39,20 @@ class _LocationMapCardState extends State<LocationMapCard> {
     if (!_isMapReady || widget.locations.isEmpty) return;
 
     if (widget.locations.length == 1) {
-      _mapController.move(ListViewHelpers.getCoordinate(widget.locations.first), 8.0);
+      _mapController.move(
+        ListViewHelpers.getCoordinate(widget.locations.first),
+        8.0,
+      );
       return;
     }
 
-    final points = widget.locations.map((loc) => ListViewHelpers.getCoordinate(loc)).toList();
+    final points = widget.locations
+        .map((loc) => ListViewHelpers.getCoordinate(loc))
+        .toList();
     final bounds = LatLngBounds.fromPoints(points);
 
     _mapController.fitCamera(
-      CameraFit.bounds(
-        bounds: bounds,
-        padding: const EdgeInsets.all(50.0),
-      ),
+      CameraFit.bounds(bounds: bounds, padding: const EdgeInsets.all(50.0)),
     );
   }
 
@@ -70,7 +72,10 @@ class _LocationMapCardState extends State<LocationMapCard> {
             const SizedBox(height: 16),
             Text(
               'Your location scores will be displayed here.',
-              style: TextStyle(color: widget.isDark ? Colors.white : Colors.black, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                color: widget.isDark ? Colors.white : Colors.black,
+                fontWeight: FontWeight.w600,
+              ),
             ),
             const SizedBox(height: 4),
             Text(
@@ -85,24 +90,28 @@ class _LocationMapCardState extends State<LocationMapCard> {
     return Container(
       height: 220,
       decoration: BoxDecoration(
-          color: widget.isDark ? const Color(0xFF1C1C1E) : Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
-              blurRadius: 10,
-              offset: const Offset(0, 5),
-            )
-          ]
+        color: widget.isDark ? const Color(0xFF1C1C1E) : Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(20),
         child: FlutterMap(
           mapController: _mapController,
           options: MapOptions(
-            initialCenter: ListViewHelpers.getCoordinate(widget.locations.first),
+            initialCenter: ListViewHelpers.getCoordinate(
+              widget.locations.first,
+            ),
             initialZoom: 6.0,
-            interactionOptions: const InteractionOptions(flags: InteractiveFlag.none),
+            interactionOptions: const InteractionOptions(
+              flags: InteractiveFlag.none,
+            ),
             onMapReady: () {
               _isMapReady = true;
               _boundMap();
@@ -123,7 +132,8 @@ class _LocationMapCardState extends State<LocationMapCard> {
 
                 return Marker(
                   point: ListViewHelpers.getCoordinate(loc),
-                  width: isSelected ? 80 : 30, // Make unselected markers smaller
+                  width: isSelected ? 80 : 30,
+                  // Make unselected markers smaller
                   height: isSelected ? 36 : 30,
                   child: isSelected
                       ? _buildMapPill(index, score)
@@ -145,10 +155,7 @@ class _LocationMapCardState extends State<LocationMapCard> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
-            blurRadius: 4,
-          )
+          BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 4),
         ],
       ),
       child: Row(
@@ -158,7 +165,11 @@ class _LocationMapCardState extends State<LocationMapCard> {
           const SizedBox(width: 4),
           Text(
             score.toStringAsFixed(1),
-            style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 13),
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+              fontSize: 13,
+            ),
           ),
         ],
       ),
@@ -172,15 +183,10 @@ class _LocationMapCardState extends State<LocationMapCard> {
         color: Colors.white,
         shape: BoxShape.circle,
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
-            blurRadius: 4,
-          )
+          BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 4),
         ],
       ),
-      child: Center(
-        child: ListViewHelpers.getShapeIndicator(index),
-      ),
+      child: Center(child: ListViewHelpers.getShapeIndicator(index)),
     );
   }
 }

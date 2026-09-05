@@ -1,6 +1,8 @@
 import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../../providers/theme_provider.dart';
 
 class AppHeader extends StatelessWidget implements PreferredSizeWidget {
@@ -66,7 +68,7 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
                   themeProvider.toggleTheme(!isDark);
                 },
               ),
-            )
+            ),
           ],
         ),
       ),

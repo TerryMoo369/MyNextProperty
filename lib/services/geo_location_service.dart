@@ -1,11 +1,14 @@
 import 'dart:convert';
+
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:geocoding/geocoding.dart';
 import 'package:latlong2/latlong.dart';
 
 class GeoLocationService {
   static final GeoLocationService _instance = GeoLocationService._internal();
+
   factory GeoLocationService() => _instance;
+
   GeoLocationService._internal();
 
   List<dynamic>? _cachedGeoJsonFeatures;
@@ -57,8 +60,8 @@ class GeoLocationService {
       final double xj = polygon[j][0].toDouble();
       final double yj = polygon[j][1].toDouble();
 
-      final bool intersect = ((yi > y) != (yj > y)) &&
-          (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+      final bool intersect =
+          ((yi > y) != (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
       if (intersect) {
         inside = !inside;
       }
@@ -69,7 +72,9 @@ class GeoLocationService {
 
   Future<String?> getStateFromAddress(String address) async {
     try {
-      final List<Location> locations = await _geocoding.locationFromAddress(address);
+      final List<Location> locations = await _geocoding.locationFromAddress(
+        address,
+      );
       if (locations.isEmpty) return null;
 
       final Location location = locations.first;

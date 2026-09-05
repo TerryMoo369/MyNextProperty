@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../utils/list_view/list_view_helpers.dart';
+
+import 'list_view_helpers.dart';
 
 class LocationSelector extends StatelessWidget {
   final bool isDark;
@@ -34,7 +35,9 @@ class LocationSelector extends StatelessWidget {
                 color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: isSelected ? ListViewHelpers.getColorForIndex(idx) : (isDark ? Colors.white10 : Colors.black12),
+                  color: isSelected
+                      ? ListViewHelpers.getColorForIndex(idx)
+                      : (isDark ? Colors.white10 : Colors.black12),
                   width: isSelected ? 2 : 1,
                 ),
               ),
@@ -46,7 +49,9 @@ class LocationSelector extends StatelessWidget {
                     loc.split(',').first,
                     style: TextStyle(
                       color: isDark ? Colors.white : Colors.black,
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      fontWeight: isSelected
+                          ? FontWeight.bold
+                          : FontWeight.normal,
                     ),
                   ),
                 ],

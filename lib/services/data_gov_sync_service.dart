@@ -1,18 +1,24 @@
 import 'package:flutter/cupertino.dart';
 import 'package:sqflite/sqflite.dart';
-import '../Data/dataGovApi.dart';
-import '../Data/databaseHelper.dart';
-import '../Data/queryBuilder.dart';
-import '../Data/Dataset.dart';
+
+import '../data/database_helper.dart';
+import '../data/query_builder.dart';
+import './data_gov_api_service.dart';
 
 class DataSyncService {
   final DataGovApi _apiClient = DataGovApi();
   final DatabaseHelper _dbHelper = DatabaseHelper();
 
   /// Orchestrates fetching from API and mapping to Local SQLite
-  Future<void> syncDataset(String datasetId, {QueryBuilder? queryBuilder}) async {
+  Future<void> syncDataset(
+    String datasetId, {
+    QueryBuilder? queryBuilder,
+  }) async {
     // Extract
-    final rawData = await _apiClient.fetchDataset(datasetId, queryBuilder: queryBuilder);
+    final rawData = await _apiClient.fetchDataset(
+      datasetId,
+      queryBuilder: queryBuilder,
+    );
 
     // Transform & Load
     final batch = await _dbHelper.getBatch();
@@ -24,7 +30,7 @@ class DataSyncService {
       }
 
       switch (datasetId) {
-      // 1. Population State
+        // 1. Population State
         case Dataset.POPULATION_STATE:
           if (stateId != null) {
             _dbHelper.batchUpsert(
@@ -36,14 +42,15 @@ class DataSyncService {
                 'sex': item['sex'],
                 'age': item['age'],
                 'ethnicity': item['ethnicity'],
-                'population_000': (item['population'] as num?)?.toDouble() ?? 0.0,
+                'population_000':
+                    (item['population'] as num?)?.toDouble() ?? 0.0,
               },
               conflictColumns: ['state_id', 'date', 'sex', 'age', 'ethnicity'],
             );
           }
           break;
 
-      // 2. CPI State
+        // 2. CPI State
         case Dataset.CPI_STATE:
           if (stateId != null) {
             _dbHelper.batchUpsert(
@@ -55,12 +62,18 @@ class DataSyncService {
                 'cpi_division': item['division']?.toString(),
                 'cpi_index': (item['index'] as num?)?.toDouble(),
               },
-              conflictColumns: ['state_id', 'date', 'district', 'cpi_division', 'gdp_sector'],
+              conflictColumns: [
+                'state_id',
+                'date',
+                'district',
+                'cpi_division',
+                'gdp_sector',
+              ],
             );
           }
           break;
 
-      // 3. Crime District
+        // 3. Crime District
         case Dataset.CRIME_DISTRICT:
           if (stateId != null) {
             _dbHelper.batchUpsert(
@@ -74,12 +87,18 @@ class DataSyncService {
                 'crime_type': item['type'] ?? 'all',
                 'cases': (item['crimes'] as num?)?.toInt() ?? 0,
               },
-              conflictColumns: ['state_id', 'date', 'district', 'crime_category', 'crime_type'],
+              conflictColumns: [
+                'state_id',
+                'date',
+                'district',
+                'crime_category',
+                'crime_type',
+              ],
             );
           }
           break;
 
-      // 4. Household Income District
+        // 4. Household Income District
         case Dataset.HH_INCOME_DISTRICT:
           if (stateId != null) {
             _dbHelper.batchUpsert(
@@ -92,12 +111,18 @@ class DataSyncService {
                 'income_mean': (item['income_mean'] as num?)?.toDouble(),
                 'income_median': (item['income_median'] as num?)?.toDouble(),
               },
-              conflictColumns: ['state_id', 'date', 'district', 'cpi_division', 'gdp_sector'],
+              conflictColumns: [
+                'state_id',
+                'date',
+                'district',
+                'cpi_division',
+                'gdp_sector',
+              ],
             );
           }
           break;
 
-      // 5. Fuel Price (National)
+        // 5. Fuel Price (National)
         case Dataset.FUELPRICE:
           _dbHelper.batchUpsert(
             batch,
@@ -114,7 +139,7 @@ class DataSyncService {
           );
           break;
 
-      // 6. Hospital Beds
+        // 6. Hospital Beds
         case Dataset.HOSPITAL_BEDS:
           if (stateId != null) {
             _dbHelper.batchUpsert(
@@ -128,12 +153,18 @@ class DataSyncService {
                 'beds': (item['beds'] as num?)?.toInt() ?? 0,
               },
               // UPDATE HERE: Added staff_type to match SQL
-              conflictColumns: ['date', 'state_id', 'district', 'hospital_type', 'staff_type'],
+              conflictColumns: [
+                'date',
+                'state_id',
+                'district',
+                'hospital_type',
+                'staff_type',
+              ],
             );
           }
           break;
 
-      // 7. Healthcare Staff
+        // 7. Healthcare Staff
         case Dataset.HEALTHCARE_STAFF:
           if (stateId != null) {
             _dbHelper.batchUpsert(
@@ -146,12 +177,18 @@ class DataSyncService {
                 'staff_count': (item['staff'] as num?)?.toInt() ?? 0,
               },
               // UPDATE HERE: Added district and hospital_type to match SQL
-              conflictColumns: ['date', 'state_id', 'district', 'hospital_type', 'staff_type'],
+              conflictColumns: [
+                'date',
+                'state_id',
+                'district',
+                'hospital_type',
+                'staff_type',
+              ],
             );
           }
           break;
 
-      // 8. Drug Addicts by Drug Type
+        // 8. Drug Addicts by Drug Type
         case Dataset.DRUG_ADDICTS_DRUGTYPE:
           if (stateId != null) {
             _dbHelper.batchUpsert(
@@ -163,9 +200,15 @@ class DataSyncService {
                 'total': (item['total'] as num?)?.toInt() ?? 0,
                 'opiate': (item['opiate'] as num?)?.toInt() ?? 0,
                 'cannabis': (item['cannabis'] as num?)?.toInt() ?? 0,
-                'meth_crystalline': (item['methamphetamine (crystalline)'] as num?)?.toInt() ?? 0,
-                'ats': (item['amphetamine-type stimulants (ats)'] as num?)?.toInt() ?? 0,
-                'psychotropic_pill': (item['psychotropic pill'] as num?)?.toInt() ?? 0,
+                'meth_crystalline':
+                    (item['methamphetamine (crystalline)'] as num?)?.toInt() ??
+                    0,
+                'ats':
+                    (item['amphetamine-type stimulants (ats)'] as num?)
+                        ?.toInt() ??
+                    0,
+                'psychotropic_pill':
+                    (item['psychotropic pill'] as num?)?.toInt() ?? 0,
                 'others': (item['others'] as num?)?.toInt() ?? 0,
               },
               conflictColumns: ['state_id', 'date'],
@@ -173,7 +216,7 @@ class DataSyncService {
           }
           break;
 
-      // 9. Teachers in District
+        // 9. Teachers in District
         case Dataset.TEACHERS_DISTRICT:
           if (stateId != null) {
             _dbHelper.batchUpsert(
@@ -192,7 +235,7 @@ class DataSyncService {
           }
           break;
 
-      // 10. SDG 04-6-1: Literacy & Numeracy
+        // 10. SDG 04-6-1: Literacy & Numeracy
         case Dataset.SDG_04_6_1:
           if (stateId != null) {
             _dbHelper.batchUpsert(
@@ -202,14 +245,15 @@ class DataSyncService {
                 'state_id': stateId,
                 'date': item['date'],
                 'sex': item['sex']?.toString(),
-                'literacy_proportion': (item['proportion'] as num?)?.toDouble() ?? 0.0,
+                'literacy_proportion':
+                    (item['proportion'] as num?)?.toDouble() ?? 0.0,
               },
               conflictColumns: ['state_id', 'date', 'district', 'stage', 'sex'],
             );
           }
           break;
 
-      // 11. HIES: Household Income, Expenditure & Poverty
+        // 11. HIES: Household Income, Expenditure & Poverty
         case Dataset.HIES_DISTRICT:
           if (stateId != null) {
             _dbHelper.batchUpsert(
@@ -223,14 +267,21 @@ class DataSyncService {
                 'poverty_rate': (item['poverty'] as num?)?.toDouble(),
                 'income_mean': (item['income_mean'] as num?)?.toDouble(),
                 'income_median': (item['income_median'] as num?)?.toDouble(),
-                'expenditure_mean': (item['expenditure_mean'] as num?)?.toDouble(),
+                'expenditure_mean': (item['expenditure_mean'] as num?)
+                    ?.toDouble(),
               },
-              conflictColumns: ['state_id', 'date', 'district', 'cpi_division', 'gdp_sector'],
+              conflictColumns: [
+                'state_id',
+                'date',
+                'district',
+                'cpi_division',
+                'gdp_sector',
+              ],
             );
           }
           break;
 
-      // 12. Labour Force Statistics
+        // 12. Labour Force Statistics
         case Dataset.LFS_DISTRICT:
           if (stateId != null) {
             _dbHelper.batchUpsert(
@@ -244,12 +295,18 @@ class DataSyncService {
                 'participation_rate': (item['p_rate'] as num?)?.toDouble(),
                 'unemployment_rate': (item['u_rate'] as num?)?.toDouble(),
               },
-              conflictColumns: ['state_id', 'date', 'district', 'cpi_division', 'gdp_sector'],
+              conflictColumns: [
+                'state_id',
+                'date',
+                'district',
+                'cpi_division',
+                'gdp_sector',
+              ],
             );
           }
           break;
 
-      // 13. Forest Reserve Area
+        // 13. Forest Reserve Area
         case Dataset.FOREST_RESERVE_STATE:
           if (stateId != null) {
             _dbHelper.batchUpsert(
@@ -258,14 +315,15 @@ class DataSyncService {
               data: {
                 'state_id': stateId,
                 'date': item['date'],
-                'forest_reserve_area': (item['area'] as num?)?.toDouble() ?? 0.0,
+                'forest_reserve_area':
+                    (item['area'] as num?)?.toDouble() ?? 0.0,
               },
               conflictColumns: ['state_id', 'date'],
             );
           }
           break;
 
-      // 14. Real GDP District
+        // 14. Real GDP District
         case Dataset.GDP_DISTRICT_REAL_SUPPLY:
           if (stateId != null) {
             _dbHelper.batchUpsert(
@@ -278,12 +336,18 @@ class DataSyncService {
                 'gdp_value': (item['value'] as num?)?.toDouble(),
                 'gdp_sector': item['sector']?.toString(),
               },
-              conflictColumns: ['state_id', 'date', 'district', 'cpi_division', 'gdp_sector'],
+              conflictColumns: [
+                'state_id',
+                'date',
+                'district',
+                'cpi_division',
+                'gdp_sector',
+              ],
             );
           }
           break;
 
-      // 15. Basic Amenities Access
+        // 15. Basic Amenities Access
         case Dataset.HH_ACCESS_AMENITIES:
           if (stateId != null) {
             _dbHelper.batchUpsert(
@@ -339,7 +403,6 @@ class DataSyncService {
 
         // RATE LIMIT PROTECTION: Wait 400ms between API calls (~2.5 req/sec)
         await Future.delayed(const Duration(milliseconds: 400));
-
       } catch (e) {
         debugPrint('❌ [DataSync] Error syncing $datasetId: $e');
       }
@@ -353,15 +416,22 @@ class DataSyncService {
   Future<void> verifyDatabase() async {
     final db = await _dbHelper.database;
     final tables = [
-      'state', 'population', 'economy', 'crime',
-      'drug_crime', 'healthcare', 'education',
-      'utilities', 'environment', 'fuelprice'
+      'state',
+      'population',
+      'economy',
+      'crime',
+      'drug_crime',
+      'healthcare',
+      'education',
+      'utilities',
+      'environment',
+      'fuelprice',
     ];
 
     debugPrint('📊 --- DATABASE CACHE VERIFICATION ---');
     for (String table in tables) {
       final count = Sqflite.firstIntValue(
-          await db.rawQuery('SELECT COUNT(*) FROM $table')
+        await db.rawQuery('SELECT COUNT(*) FROM $table'),
       );
       debugPrint('   -> Table "$table": $count rows');
     }

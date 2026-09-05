@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../Data/repository.dart';
+
+import '../data/repository.dart';
 import '../providers/search_filter_provider.dart';
 import '../services/geo_location_service.dart';
 
@@ -81,14 +82,18 @@ class _SearchScreenState extends State<SearchScreen> {
 
     // Only geocode if it's a typed query not directly chosen from database suggestions
     if (!_suggestions.contains(location)) {
-      final stateName = await GeoLocationService().getStateFromAddress(location);
+      final stateName = await GeoLocationService().getStateFromAddress(
+        location,
+      );
 
       // Validation check: Location must resolve within Malaysia's GeoJSON boundaries
       if (stateName == null) {
         if (mounted) {
           scaffoldMessenger.showSnackBar(
             const SnackBar(
-              content: Text('Invalid location or outside Malaysia. Please select a valid state or district.'),
+              content: Text(
+                'Invalid location or outside Malaysia. Please select a valid state or district.',
+              ),
               behavior: SnackBarBehavior.floating,
               backgroundColor: Colors.redAccent,
             ),
@@ -148,7 +153,10 @@ class _SearchScreenState extends State<SearchScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new, color: isDark ? Colors.white : Colors.black),
+          icon: Icon(
+            Icons.arrow_back_ios_new,
+            color: isDark ? Colors.white : Colors.black,
+          ),
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
@@ -170,7 +178,8 @@ class _SearchScreenState extends State<SearchScreen> {
               TextField(
                 controller: _controller,
                 autofocus: true,
-                enabled: !_isResolvingLocation, // Disable input while geocoding
+                enabled: !_isResolvingLocation,
+                // Disable input while geocoding
                 onChanged: _onSearchChanged,
                 onSubmitted: (value) {
                   final location = value.trim();
@@ -183,7 +192,10 @@ class _SearchScreenState extends State<SearchScreen> {
                   hintStyle: TextStyle(color: Colors.grey[500]),
                   filled: true,
                   fillColor: isDark ? const Color(0xFF1C1C1E) : Colors.white,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide.none,
@@ -191,17 +203,21 @@ class _SearchScreenState extends State<SearchScreen> {
                   prefixIcon: const Icon(Icons.search, color: Colors.grey),
                   suffixIcon: _isResolvingLocation
                       ? const Padding(
-                    padding: EdgeInsets.all(12),
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
+                          padding: EdgeInsets.all(12),
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
                       : _isSearching
                       ? IconButton(
-                    icon: const Icon(Icons.cancel, color: Colors.grey, size: 20),
-                    onPressed: () {
-                      _controller.clear();
-                      _onSearchChanged('');
-                    },
-                  )
+                          icon: const Icon(
+                            Icons.cancel,
+                            color: Colors.grey,
+                            size: 20,
+                          ),
+                          onPressed: () {
+                            _controller.clear();
+                            _onSearchChanged('');
+                          },
+                        )
                       : null,
                 ),
               ),
@@ -222,11 +238,17 @@ class _SearchScreenState extends State<SearchScreen> {
                           color: isDark ? Colors.white : Colors.black,
                         ),
                       ),
-                      deleteIcon: const Icon(Icons.cancel, size: 18, color: Colors.grey),
+                      deleteIcon: const Icon(
+                        Icons.cancel,
+                        size: 18,
+                        color: Colors.grey,
+                      ),
                       onDeleted: () {
                         filterProvider.removeLocation(location);
                       },
-                      backgroundColor: isDark ? const Color(0xFF2C2C2E) : Colors.grey[300],
+                      backgroundColor: isDark
+                          ? const Color(0xFF2C2C2E)
+                          : Colors.grey[300],
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(20),
                         side: BorderSide.none,
@@ -262,7 +284,8 @@ class _SearchScreenState extends State<SearchScreen> {
 
     return ListView.separated(
       itemCount: _suggestions.length,
-      separatorBuilder: (_, __) => Divider(height: 1, color: isDark ? Colors.white10 : Colors.black12),
+      separatorBuilder: (_, __) =>
+          Divider(height: 1, color: isDark ? Colors.white10 : Colors.black12),
       itemBuilder: (context, index) {
         final item = _suggestions[index];
         return ListTile(
@@ -273,11 +296,19 @@ class _SearchScreenState extends State<SearchScreen> {
               color: isDark ? const Color(0xFF1C1C1E) : Colors.grey[200],
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.location_on, color: Color(0xFF0A84FF), size: 20),
+            child: const Icon(
+              Icons.location_on,
+              color: Color(0xFF0A84FF),
+              size: 20,
+            ),
           ),
           title: Text(
             item,
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: isDark ? Colors.white : Colors.black),
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+              color: isDark ? Colors.white : Colors.black,
+            ),
           ),
           onTap: () => _selectLocation(item),
         );
@@ -293,7 +324,11 @@ class _SearchScreenState extends State<SearchScreen> {
       children: [
         Text(
           'Recent Searches',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black),
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: isDark ? Colors.white : Colors.black,
+          ),
         ),
         const SizedBox(height: 12),
         Expanded(
@@ -306,7 +341,10 @@ class _SearchScreenState extends State<SearchScreen> {
                 leading: const Icon(Icons.history, color: Colors.grey),
                 title: Text(
                   item,
-                  style: TextStyle(fontSize: 16, color: isDark ? Colors.white : Colors.black),
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: isDark ? Colors.white : Colors.black,
+                  ),
                 ),
                 trailing: IconButton(
                   icon: const Icon(Icons.close, size: 18, color: Colors.grey),

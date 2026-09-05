@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../providers/search_filter_provider.dart';
-import '../../Data/repository.dart';
-import '../../services/ScoringService.dart';
-import '../../widgets/list_view/indicator_breakdown.dart';
-import '../../widgets/list_view/location_map_card.dart';
-import '../../widgets/list_view/location_selector.dart';
+
+import '../data/repository.dart';
+import '../providers/search_filter_provider.dart';
+import '../services/scoring_service.dart';
+import '../widgets/list_view/indicator_breakdown.dart';
+import '../widgets/list_view/location_map_card.dart';
+import '../widgets/list_view/location_selector.dart';
 
 class ListViewScreen extends StatefulWidget {
   const ListViewScreen({super.key});
@@ -28,7 +29,10 @@ class _ListViewScreenState extends State<ListViewScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        final provider = Provider.of<SearchFilterProvider>(context, listen: false);
+        final provider = Provider.of<SearchFilterProvider>(
+          context,
+          listen: false,
+        );
         _fetchData(provider);
       }
     });
@@ -72,7 +76,7 @@ class _ListViewScreenState extends State<ListViewScreen> {
       _repository.getHealthcare(dbStates),
       _repository.getEducation(dbStates),
       _repository.getUtilities(dbStates),
-      _repository.getEnvironment(dbStates)
+      _repository.getEnvironment(dbStates),
     ]);
 
     final pop = results[0];
@@ -96,8 +100,8 @@ class _ListViewScreenState extends State<ListViewScreen> {
 
       double getVal(List<Map<String, dynamic>> dbList, String column) {
         final row = dbList.firstWhere(
-                (e) => e['state_name'].toString().contains(dbState),
-            orElse: () => {}
+          (e) => e['state_name'].toString().contains(dbState),
+          orElse: () => {},
         );
         return (row[column] as num?)?.toDouble() ?? 0.0;
       }
@@ -111,7 +115,10 @@ class _ListViewScreenState extends State<ListViewScreen> {
       newData[rawLoc]!['Income Inequality'] = getVal(econ, 'gini_coefficient');
       newData[rawLoc]!['GDP'] = getVal(econ, 'gdp');
       newData[rawLoc]!['Labour Force'] = getVal(econ, 'labour_force');
-      newData[rawLoc]!['Workforce Participation'] = getVal(econ, 'participation_rate');
+      newData[rawLoc]!['Workforce Participation'] = getVal(
+        econ,
+        'participation_rate',
+      );
       newData[rawLoc]!['Unemployment Rate'] = getVal(econ, 'unemployment');
       newData[rawLoc]!['General Crime'] = getVal(crime, 'total_crimes');
       newData[rawLoc]!['Drug Crime'] = getVal(drugCrime, 'total_drug_cases');
@@ -119,14 +126,20 @@ class _ListViewScreenState extends State<ListViewScreen> {
       newData[rawLoc]!['Healthcare Staff'] = getVal(health, 'total_staff');
       newData[rawLoc]!['Teachers'] = getVal(education, 'total_teachers');
       newData[rawLoc]!['Literacy Rate'] = getVal(education, 'literacy_rate');
-      newData[rawLoc]!['Electricity Access'] = getVal(utilities, 'electricity_access');
+      newData[rawLoc]!['Electricity Access'] = getVal(
+        utilities,
+        'electricity_access',
+      );
       newData[rawLoc]!['Water Access'] = getVal(utilities, 'water_access');
       newData[rawLoc]!['Sanitation'] = getVal(utilities, 'sanitation_access');
       newData[rawLoc]!['Green Space'] = getVal(environment, 'green_space_area');
 
-      for(var filter in SearchFilterProvider.availableFilters) {
+      for (var filter in SearchFilterProvider.availableFilters) {
         double val = newData[rawLoc]![filter] ?? 0.0;
-        newFormattedData[rawLoc]![filter] = ScoringService.formatRawData(filter, val);
+        newFormattedData[rawLoc]![filter] = ScoringService.formatRawData(
+          filter,
+          val,
+        );
       }
     }
 
@@ -135,8 +148,11 @@ class _ListViewScreenState extends State<ListViewScreen> {
 
     _calculateScores(provider, locations);
 
-    if (_selectedBreakdownLocation == null || !locations.contains(_selectedBreakdownLocation)) {
-      _selectedBreakdownLocation = locations.isNotEmpty ? locations.first : null;
+    if (_selectedBreakdownLocation == null ||
+        !locations.contains(_selectedBreakdownLocation)) {
+      _selectedBreakdownLocation = locations.isNotEmpty
+          ? locations.first
+          : null;
     }
 
     if (mounted) setState(() => _isLoading = false);
@@ -157,7 +173,11 @@ class _ListViewScreenState extends State<ListViewScreen> {
       for (var loc in locations) {
         filterValuesToCompare[loc] = _rawDatabaseData[loc]?[filter] ?? 0.0;
       }
-      Map<String, double> normalizedScores = ScoringService.calculateNormalizedScores(filter, filterValuesToCompare);
+      Map<String, double> normalizedScores =
+          ScoringService.calculateNormalizedScores(
+            filter,
+            filterValuesToCompare,
+          );
 
       for (var loc in locations) {
         _indicatorScores[loc]![filter] = normalizedScores[loc] ?? 0.0;
@@ -183,55 +203,64 @@ class _ListViewScreenState extends State<ListViewScreen> {
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Consumer<SearchFilterProvider>(
-        builder: (context, provider, child) {
-          final locations = provider.selectedLocations;
+      builder: (context, provider, child) {
+        final locations = provider.selectedLocations;
 
-          if (locations.length != _rawDatabaseData.length && !_isLoading) {
-            WidgetsBinding.instance.addPostFrameCallback((_) => _fetchData(provider));
-          }
-
-          if (!_isLoading && locations.isNotEmpty) {
-            _calculateScores(provider, locations);
-          }
-
-          return ListView(
-            padding: const EdgeInsets.only(top: 110, bottom: 120, left: 20, right: 20),
-            children: [
-              Text(
-                'Location Score',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : Colors.black,
-                ),
-              ),
-              const SizedBox(height: 16),
-              LocationMapCard(
-                isDark: isDark,
-                locations: locations,
-                overallScores: _overallScores,
-                selectedLocation: _selectedBreakdownLocation,
-              ),
-              const SizedBox(height: 20),
-              if (locations.isNotEmpty) ...[
-                LocationSelector(
-                  isDark: isDark,
-                  locations: locations,
-                  selectedLocation: _selectedBreakdownLocation,
-                  onLocationSelected: (loc) => setState(() => _selectedBreakdownLocation = loc),
-                ),
-                const SizedBox(height: 20),
-                IndicatorBreakdown(
-                  isDark: isDark,
-                  provider: provider,
-                  selectedLocation: _selectedBreakdownLocation,
-                  indicatorScores: _indicatorScores,
-                  formattedData: _formattedData, // Passes the beautiful strings instead of raw doubles
-                ),
-              ]
-            ],
+        if (locations.length != _rawDatabaseData.length && !_isLoading) {
+          WidgetsBinding.instance.addPostFrameCallback(
+            (_) => _fetchData(provider),
           );
         }
+
+        if (!_isLoading && locations.isNotEmpty) {
+          _calculateScores(provider, locations);
+        }
+
+        return ListView(
+          padding: const EdgeInsets.only(
+            top: 110,
+            bottom: 120,
+            left: 20,
+            right: 20,
+          ),
+          children: [
+            Text(
+              'Location Score',
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : Colors.black,
+              ),
+            ),
+            const SizedBox(height: 16),
+            LocationMapCard(
+              isDark: isDark,
+              locations: locations,
+              overallScores: _overallScores,
+              selectedLocation: _selectedBreakdownLocation,
+            ),
+            const SizedBox(height: 20),
+            if (locations.isNotEmpty) ...[
+              LocationSelector(
+                isDark: isDark,
+                locations: locations,
+                selectedLocation: _selectedBreakdownLocation,
+                onLocationSelected: (loc) =>
+                    setState(() => _selectedBreakdownLocation = loc),
+              ),
+              const SizedBox(height: 20),
+              IndicatorBreakdown(
+                isDark: isDark,
+                provider: provider,
+                selectedLocation: _selectedBreakdownLocation,
+                indicatorScores: _indicatorScores,
+                formattedData:
+                    _formattedData, // Passes the beautiful strings instead of raw doubles
+              ),
+            ],
+          ],
+        );
+      },
     );
   }
 }

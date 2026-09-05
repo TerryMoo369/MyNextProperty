@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:mynextproperty/services/geo_location_service.dart';
-import 'package:mynextproperty/utils/list_view/list_view_helpers.dart';
+import 'package:mynextproperty/widgets/list_view/list_view_helpers.dart';
 import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
+
 import '../../providers/search_filter_provider.dart';
-import '../../Data/repository.dart';
 import '../../widgets/list_view/location_map_card.dart';
+import '../data/repository.dart';
 import '../widgets/list_view/location_selector.dart';
 
 enum GraphMode { bar, pie }
@@ -150,10 +151,7 @@ class _GraphViewScreenState extends State<GraphViewScreen> {
         _categoryStats = temp;
         _isLoading = false;
         _loadedLocations = states.length;
-        _states = {
-          for (int i = 0; i < states.length; i++)
-            states[i]: i
-        };
+        _states = {for (int i = 0; i < states.length; i++) states[i]: i};
       });
     }
   }
@@ -175,7 +173,8 @@ class _GraphViewScreenState extends State<GraphViewScreen> {
         List<StatefulWidget> charts = [];
 
         for (var filter in provider.activeFilters) {
-          List<MapEntry<String, double>> data = _categoryStats[filter]?.entries.toList() ?? [];
+          List<MapEntry<String, double>> data =
+              _categoryStats[filter]?.entries.toList() ?? [];
           data.sort((a, b) => _states[a.key]!.compareTo(_states[b.key]!));
           if (_mode == GraphMode.bar) {
             charts.add(
@@ -198,24 +197,22 @@ class _GraphViewScreenState extends State<GraphViewScreen> {
             );
           } else if (_mode == GraphMode.pie) {
             charts.add(
-                SfCircularChart(
-                    title: ChartTitle(text: filter),
-                    tooltipBehavior: _tooltipBehavior,
-                    legend: Legend(isVisible: true),
-                    series: [
-                      PieSeries<MapEntry<String, double>, String>(
-                        dataSource: data,
-                        xValueMapper: (item, _) => item.key,
-                        yValueMapper: (item, _) => item.value,
-                        pointColorMapper: (_, i) =>
-                            ListViewHelpers.getColorForIndex(i),
-                        selectionBehavior: _selectionBehavior,
-                        dataLabelSettings: DataLabelSettings(
-                            isVisible: true
-                        )
-                      )
-                    ]
-                )
+              SfCircularChart(
+                title: ChartTitle(text: filter),
+                tooltipBehavior: _tooltipBehavior,
+                legend: Legend(isVisible: true),
+                series: [
+                  PieSeries<MapEntry<String, double>, String>(
+                    dataSource: data,
+                    xValueMapper: (item, _) => item.key,
+                    yValueMapper: (item, _) => item.value,
+                    pointColorMapper: (_, i) =>
+                        ListViewHelpers.getColorForIndex(i),
+                    selectionBehavior: _selectionBehavior,
+                    dataLabelSettings: DataLabelSettings(isVisible: true),
+                  ),
+                ],
+              ),
             );
           }
         }
@@ -248,12 +245,13 @@ class _GraphViewScreenState extends State<GraphViewScreen> {
               LocationSelector(
                 isDark: isDark,
                 locations: ["Bar Chart", "Pie Chart"],
-                selectedLocation: _mode == GraphMode.pie ? "Pie Chart" : "Bar Chart",
+                selectedLocation: _mode == GraphMode.pie
+                    ? "Pie Chart"
+                    : "Bar Chart",
                 onLocationSelected: (mode) => setState(() {
                   if (mode == "Bar Chart") {
                     _mode = GraphMode.bar;
-                  }
-                  else if (mode == "Pie Chart") {
+                  } else if (mode == "Pie Chart") {
                     _mode = GraphMode.pie;
                   }
                 }),

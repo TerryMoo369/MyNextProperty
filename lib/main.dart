@@ -1,24 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:mynextproperty/screens/main_layout.dart';
-import 'package:mynextproperty/services/dataSync_service.dart';
+import 'package:mynextproperty/services/data_gov_sync_service.dart';
+import 'package:mynextproperty/views/main_layout.dart';
 import 'package:provider/provider.dart';
-import 'Data/databaseHelper.dart';
-import 'theme/app_theme.dart';
-import 'providers/theme_provider.dart';
+
+import 'data/database_helper.dart';
 import 'providers/search_filter_provider.dart';
+import 'providers/theme_provider.dart';
+import 'theme/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // Ensure Flutter bindings are initialized before accessing native channels (SQLite)
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Database Cache immediately
-  // This ensures the local SQLite tables are created before the UI queries them
   final dbHelper = DatabaseHelper();
   await dbHelper.database;
 
-  // Trigger Background API Sync
-  // DO NOT 'await' this. It runs silently in the background.
   final syncService = DataSyncService();
   await syncService.syncAllBackground();
 

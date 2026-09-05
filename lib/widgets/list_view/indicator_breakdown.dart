@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+
 import '../../../providers/search_filter_provider.dart';
-import '../../utils/list_view/list_view_helpers.dart';
+import 'list_view_helpers.dart';
 
 class IndicatorBreakdown extends StatelessWidget {
   final bool isDark;
@@ -114,9 +115,13 @@ class IndicatorBreakdown extends StatelessWidget {
                             borderRadius: BorderRadius.circular(3),
                             child: LinearProgressIndicator(
                               value: animatedScore / 10.0,
-                              backgroundColor: isDark ? Colors.white24 : Colors.black12,
+                              backgroundColor: isDark
+                                  ? Colors.white24
+                                  : Colors.black12,
                               valueColor: AlwaysStoppedAnimation<Color>(
-                                  currentScore == 0 ? Colors.red : (isDark ? Colors.white : Colors.black)
+                                currentScore == 0
+                                    ? Colors.red
+                                    : (isDark ? Colors.white : Colors.black),
                               ),
                             ),
                           ),
@@ -129,10 +134,17 @@ class IndicatorBreakdown extends StatelessWidget {
             ),
             children: [
               Container(
-                margin: const EdgeInsets.only(left: 40, right: 0, bottom: 16, top: 4),
+                margin: const EdgeInsets.only(
+                  left: 40,
+                  right: 0,
+                  bottom: 16,
+                  top: 4,
+                ),
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF2C2C2E) : Colors.grey.shade100,
+                  color: isDark
+                      ? const Color(0xFF2C2C2E)
+                      : Colors.grey.shade100,
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Column(
@@ -153,7 +165,8 @@ class IndicatorBreakdown extends StatelessWidget {
                     ...rankedLocations.asMap().entries.map((entry) {
                       int rank = entry.key + 1;
                       String loc = entry.value;
-                      String locData = formattedData[loc]?[filter] ?? 'Data Unavailable';
+                      String locData =
+                          formattedData[loc]?[filter] ?? 'Data Unavailable';
                       bool isTarget = loc == selectedLocation;
 
                       return Padding(
@@ -168,7 +181,9 @@ class IndicatorBreakdown extends StatelessWidget {
                                   style: TextStyle(
                                     fontSize: 13,
                                     fontWeight: FontWeight.bold,
-                                    color: isDark ? Colors.white30 : Colors.black26,
+                                    color: isDark
+                                        ? Colors.white30
+                                        : Colors.black26,
                                   ),
                                 ),
                                 const SizedBox(width: 12),
@@ -176,10 +191,14 @@ class IndicatorBreakdown extends StatelessWidget {
                                   loc.split(',').first, // Keeps the name short
                                   style: TextStyle(
                                     fontSize: 14,
-                                    fontWeight: isTarget ? FontWeight.bold : FontWeight.w500,
+                                    fontWeight: isTarget
+                                        ? FontWeight.bold
+                                        : FontWeight.w500,
                                     color: isTarget
                                         ? (isDark ? Colors.white : Colors.black)
-                                        : (isDark ? Colors.grey[400] : Colors.grey[600]),
+                                        : (isDark
+                                              ? Colors.grey[400]
+                                              : Colors.grey[600]),
                                   ),
                                 ),
                               ],
@@ -188,10 +207,16 @@ class IndicatorBreakdown extends StatelessWidget {
                               locData,
                               style: TextStyle(
                                 fontSize: 14,
-                                fontWeight: isTarget ? FontWeight.bold : FontWeight.w600,
+                                fontWeight: isTarget
+                                    ? FontWeight.bold
+                                    : FontWeight.w600,
                                 color: isTarget
-                                    ? const Color(0xFF0A84FF) // Highlights target metric in Blue
-                                    : (isDark ? Colors.grey[400] : Colors.grey[600]),
+                                    ? const Color(
+                                        0xFF0A84FF,
+                                      ) // Highlights target metric in Blue
+                                    : (isDark
+                                          ? Colors.grey[400]
+                                          : Colors.grey[600]),
                               ),
                             ),
                           ],
@@ -200,7 +225,7 @@ class IndicatorBreakdown extends StatelessWidget {
                     }),
                   ],
                 ),
-              )
+              ),
             ],
           ),
         );

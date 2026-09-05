@@ -1,12 +1,10 @@
-import 'databaseHelper.dart';
+import 'database_helper.dart';
 
 class DataRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper();
 
-  // Helper to generate '?, ?, ?' for SQL IN clauses based on list length
   String _getPlaceholders(int count) => List.filled(count, '?').join(',');
 
-  // POPULATION
   Future<List<Map<String, dynamic>>> getPopulation(List<String> states) async {
     if (states.isEmpty) return [];
     return await _dbHelper.rawQuery('''
@@ -20,8 +18,9 @@ class DataRepository {
     ''', states);
   }
 
-  // ECONOMY (Income, Poverty, GDP, Labour)
-  Future<List<Map<String, dynamic>>> getEconomyMetrics(List<String> states) async {
+  Future<List<Map<String, dynamic>>> getEconomyMetrics(
+    List<String> states,
+  ) async {
     if (states.isEmpty) return [];
     return await _dbHelper.rawQuery('''
     SELECT s.state_name, 
@@ -42,7 +41,6 @@ class DataRepository {
   ''', states);
   }
 
-  // CRIME
   Future<List<Map<String, dynamic>>> getCrime(List<String> states) async {
     if (states.isEmpty) return [];
     return await _dbHelper.rawQuery('''
@@ -55,7 +53,6 @@ class DataRepository {
     ''', states);
   }
 
-  // DRUG CRIME
   Future<List<Map<String, dynamic>>> getDrugCrime(List<String> states) async {
     if (states.isEmpty) return [];
     return await _dbHelper.rawQuery('''
@@ -68,7 +65,6 @@ class DataRepository {
     ''', states);
   }
 
-  // HEALTHCARE
   Future<List<Map<String, dynamic>>> getHealthcare(List<String> states) async {
     if (states.isEmpty) return [];
     return await _dbHelper.rawQuery('''
@@ -82,7 +78,6 @@ class DataRepository {
     ''', states);
   }
 
-  // EDUCATION
   Future<List<Map<String, dynamic>>> getEducation(List<String> states) async {
     if (states.isEmpty) return [];
     return await _dbHelper.rawQuery('''
@@ -96,7 +91,6 @@ class DataRepository {
     ''', states);
   }
 
-  // UTILITIES
   Future<List<Map<String, dynamic>>> getUtilities(List<String> states) async {
     if (states.isEmpty) return [];
     return await _dbHelper.rawQuery('''
@@ -111,7 +105,6 @@ class DataRepository {
     ''', states);
   }
 
-  // ENVIRONMENT
   Future<List<Map<String, dynamic>>> getEnvironment(List<String> states) async {
     if (states.isEmpty) return [];
     return await _dbHelper.rawQuery('''
@@ -123,7 +116,6 @@ class DataRepository {
     ''', states);
   }
 
-  // SEARCH SUGGESTIONS (States and Districts)
   Future<List<String>> searchLocations(String query) async {
     final cleanQuery = query.trim();
     if (cleanQuery.isEmpty) return [];
@@ -131,26 +123,30 @@ class DataRepository {
     final String likeQuery = '%$cleanQuery%';
     final List<String> results = [];
 
-    // 1. Search for States
     final stateResults = await _dbHelper.rawQuery(
       "SELECT state_name FROM state WHERE state_name LIKE ? LIMIT 5",
       [likeQuery],
     );
     results.addAll(stateResults.map((row) => row['state_name'] as String));
 
-    // 2. Search for Districts (Mapped to their respective state)
-    final districtResults = await _dbHelper.rawQuery('''
+    final districtResults = await _dbHelper.rawQuery(
+      '''
       SELECT DISTINCT e.district, s.state_name
       FROM economy e
       JOIN state s ON e.state_id = s.id
       WHERE e.district LIKE ?
       LIMIT 10
-    ''', [likeQuery]);
+    ''',
+      [likeQuery],
+    );
 
     for (var row in districtResults) {
       final dist = row['district'] as String?;
       final state = row['state_name'] as String?;
-      if (dist != null && dist.isNotEmpty && state != null && state.isNotEmpty) {
+      if (dist != null &&
+          dist.isNotEmpty &&
+          state != null &&
+          state.isNotEmpty) {
         final locName = '$dist, $state';
         if (!results.contains(locName)) {
           results.add(locName);

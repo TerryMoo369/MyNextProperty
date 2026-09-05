@@ -10,7 +10,7 @@ class ScoringService {
       'Income Inequality',
       'Unemployment Rate',
       'General Crime',
-      'Drug Crime'
+      'Drug Crime',
     ];
     return !negativeIndicators.contains(filter);
   }
@@ -37,20 +37,21 @@ class ScoringService {
       case 'Income Inequality':
         return value.toStringAsFixed(3); // Gini coefficient is usually 0.xxx
       case 'Total Population':
-      // The dataset stores population in '000s, so we multiply by 1000
+        // The dataset stores population in '000s, so we multiply by 1000
         return _compact(value * 1000);
       case 'Green Space':
         return '${_compact(value)} Hectares';
       default:
-      // Crimes, Beds, Staff, Teachers, Labour force
+        // Crimes, Beds, Staff, Teachers, Labour force
         return _compact(value);
     }
   }
 
   /// Calculates a relative score from 1.0 to 10.0 based on min/max of selected locations.
   static Map<String, double> calculateNormalizedScores(
-      String filter, Map<String, double> rawValues) {
-
+    String filter,
+    Map<String, double> rawValues,
+  ) {
     final scores = <String, double>{};
     if (rawValues.isEmpty) return scores;
 
@@ -77,7 +78,8 @@ class ScoringService {
       }
 
       if (maxVal == minVal) {
-        scores[loc] = 7.5; // If all selected states are exactly equal, give a good baseline score
+        scores[loc] =
+            7.5; // If all selected states are exactly equal, give a good baseline score
       } else {
         // Min-Max Normalization mapped to 1 - 10 scale
         double normalized;

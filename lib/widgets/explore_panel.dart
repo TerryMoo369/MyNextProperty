@@ -1,16 +1,15 @@
 import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../providers/search_filter_provider.dart';
 import 'filter_bottom_sheet.dart';
 
 class ExplorePanel extends StatefulWidget {
   final VoidCallback onSearchTap;
 
-  const ExplorePanel({
-    super.key,
-    required this.onSearchTap,
-  });
+  const ExplorePanel({super.key, required this.onSearchTap});
 
   @override
   State<ExplorePanel> createState() => _ExplorePanelState();
@@ -26,7 +25,11 @@ class _ExplorePanelState extends State<ExplorePanel> {
       case 1:
         return const Icon(Icons.square, color: Color(0xFFFF9F0A), size: 16);
       case 2:
-        return const Icon(Icons.change_history, color: Color(0xFF30D158), size: 18);
+        return const Icon(
+          Icons.change_history,
+          color: Color(0xFF30D158),
+          size: 18,
+        );
       case 3:
         return const Icon(Icons.star, color: Color(0xFFBF5AF2), size: 18);
       default:
@@ -43,27 +46,27 @@ class _ExplorePanelState extends State<ExplorePanel> {
     return AnimatedSize(
       duration: const Duration(milliseconds: 400),
       curve: Curves.easeOutQuint,
-      alignment: Alignment.topRight, // CRITICAL: Forces it to shrink/grow towards the top right
+      alignment: Alignment.topRight,
       child: AnimatedSwitcher(
         duration: const Duration(milliseconds: 250),
-        // Use a simple Fade instead of the old SlideTransition to prevent weird moving
         transitionBuilder: (Widget child, Animation<double> animation) {
           return FadeTransition(opacity: animation, child: child);
         },
         child: _isExpanded
             ? SizedBox(
-          key: const ValueKey('expanded_state'), // Keys are required for AnimatedSwitcher
-          width: double.infinity,
-          child: _buildExpandedState(isDark, filterProvider, locations),
-        )
+                key: const ValueKey('expanded_state'),
+                // Keys are required for AnimatedSwitcher
+                width: double.infinity,
+                child: _buildExpandedState(isDark, filterProvider, locations),
+              )
             : Align(
-          key: const ValueKey('collapsed_state'),
-          alignment: Alignment.topRight,
-          child: Padding(
-            padding: const EdgeInsets.only(top: 12, right: 20),
-            child: _buildCollapsedState(isDark, locations),
-          ),
-        ),
+                key: const ValueKey('collapsed_state'),
+                alignment: Alignment.topRight,
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 12, right: 20),
+                  child: _buildCollapsedState(isDark, locations),
+                ),
+              ),
       ),
     );
   }
@@ -74,7 +77,9 @@ class _ExplorePanelState extends State<ExplorePanel> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1C1C1E).withOpacity(0.9) : Colors.white.withOpacity(0.95),
+          color: isDark
+              ? const Color(0xFF1C1C1E).withOpacity(0.9)
+              : Colors.white.withOpacity(0.95),
           borderRadius: BorderRadius.circular(30),
           border: Border.all(color: isDark ? Colors.white10 : Colors.black12),
           boxShadow: [
@@ -104,7 +109,11 @@ class _ExplorePanelState extends State<ExplorePanel> {
     );
   }
 
-  Widget _buildExpandedState(bool isDark, SearchFilterProvider filterProvider, List<String> locations) {
+  Widget _buildExpandedState(
+    bool isDark,
+    SearchFilterProvider filterProvider,
+    List<String> locations,
+  ) {
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(bottom: Radius.circular(24)),
       child: BackdropFilter(
@@ -113,7 +122,9 @@ class _ExplorePanelState extends State<ExplorePanel> {
           width: double.infinity,
           padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
           decoration: BoxDecoration(
-            color: isDark ? Colors.black.withOpacity(0.80) : Colors.white.withOpacity(0.85),
+            color: isDark
+                ? Colors.black.withOpacity(0.80)
+                : Colors.white.withOpacity(0.85),
             border: Border(
               bottom: BorderSide(
                 color: isDark ? Colors.white10 : Colors.black12,
@@ -144,7 +155,11 @@ class _ExplorePanelState extends State<ExplorePanel> {
                         color: isDark ? Colors.white10 : Colors.black12,
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(Icons.keyboard_arrow_up, size: 20, color: isDark ? Colors.white : Colors.black),
+                      child: Icon(
+                        Icons.keyboard_arrow_up,
+                        size: 20,
+                        color: isDark ? Colors.white : Colors.black,
+                      ),
                     ),
                   ),
                 ],
@@ -161,11 +176,18 @@ class _ExplorePanelState extends State<ExplorePanel> {
                     ...List.generate(locations.length, (index) {
                       return Container(
                         margin: const EdgeInsets.only(bottom: 8),
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 16,
+                        ),
                         decoration: BoxDecoration(
-                          color: isDark ? const Color(0xFF141415).withOpacity(0.8) : Colors.white,
+                          color: isDark
+                              ? const Color(0xFF141415).withOpacity(0.8)
+                              : Colors.white,
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: isDark ? Colors.white10 : Colors.black12),
+                          border: Border.all(
+                            color: isDark ? Colors.white10 : Colors.black12,
+                          ),
                         ),
                         child: Row(
                           children: [
@@ -186,7 +208,11 @@ class _ExplorePanelState extends State<ExplorePanel> {
                               onTap: () {
                                 filterProvider.removeLocation(locations[index]);
                               },
-                              child: const Icon(Icons.close, color: Colors.grey, size: 20),
+                              child: const Icon(
+                                Icons.close,
+                                color: Colors.grey,
+                                size: 20,
+                              ),
                             ),
                           ],
                         ),
@@ -200,18 +226,26 @@ class _ExplorePanelState extends State<ExplorePanel> {
                           width: double.infinity,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           decoration: BoxDecoration(
-                            color: isDark ? const Color(0xFF0A1B3A) : const Color(0xFFE5F0FF),
+                            color: isDark
+                                ? const Color(0xFF0A1B3A)
+                                : const Color(0xFFE5F0FF),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Icon(Icons.add, color: Color(0xFF0A84FF), size: 18),
+                              const Icon(
+                                Icons.add,
+                                color: Color(0xFF0A84FF),
+                                size: 18,
+                              ),
                               const SizedBox(width: 8),
                               Text(
                                 'COMPARE LOCATIONS',
                                 style: TextStyle(
-                                  color: isDark ? const Color(0xFF0A84FF) : const Color(0xFF005ECB),
+                                  color: isDark
+                                      ? const Color(0xFF0A84FF)
+                                      : const Color(0xFF005ECB),
                                   fontSize: 13,
                                   fontWeight: FontWeight.w600,
                                   letterSpacing: 0.5,
@@ -229,7 +263,11 @@ class _ExplorePanelState extends State<ExplorePanel> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.menu, size: 16, color: isDark ? Colors.grey[400] : Colors.grey[600]),
+                    Icon(
+                      Icons.menu,
+                      size: 16,
+                      color: isDark ? Colors.grey[400] : Colors.grey[600],
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       'All ${filterProvider.totalFiltersApplied} filters applied.',
@@ -256,19 +294,29 @@ class _ExplorePanelState extends State<ExplorePanel> {
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1C1C1E).withOpacity(0.8) : Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: isDark ? Colors.white10 : Colors.black12, width: 1),
+        border: Border.all(
+          color: isDark ? Colors.white10 : Colors.black12,
+          width: 1,
+        ),
       ),
       child: Row(
         children: [
           Container(
-            width: 10, height: 10,
-            decoration: const BoxDecoration(color: Color(0xFF0A84FF), shape: BoxShape.circle),
+            width: 10,
+            height: 10,
+            decoration: const BoxDecoration(
+              color: Color(0xFF0A84FF),
+              shape: BoxShape.circle,
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               'Tap to search a location',
-              style: TextStyle(fontSize: 15, color: isDark ? Colors.grey[400] : Colors.grey[600]),
+              style: TextStyle(
+                fontSize: 15,
+                color: isDark ? Colors.grey[400] : Colors.grey[600],
+              ),
             ),
           ),
           Container(
@@ -277,7 +325,14 @@ class _ExplorePanelState extends State<ExplorePanel> {
               color: const Color(0xFF0A84FF),
               borderRadius: BorderRadius.circular(20),
             ),
-            child: const Text('Start', style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
+            child: const Text(
+              'Start',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ],
       ),

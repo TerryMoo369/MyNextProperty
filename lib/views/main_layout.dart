@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:mynextproperty/screens/graph_view.dart';
 import 'package:provider/provider.dart';
+
 import '../providers/search_filter_provider.dart';
-import 'list_view/list_view_screen.dart';
-import 'search_screen.dart';
+import '../widgets/explore_panel.dart';
 import 'global/header.dart';
 import 'global/navigation.dart';
-import '../widgets/explore_panel.dart';
-import '../pages/map_view/map_view.dart';
+import 'graph_view.dart';
+import 'list_view.dart';
+import 'map_view.dart';
+import 'search_screen.dart';
 
 class MainLayout extends StatefulWidget {
   const MainLayout({super.key});
@@ -31,7 +32,10 @@ class _MainLayoutState extends State<MainLayout> {
     });
 
     // Notify Provider to adapt filter stack rule
-    final filterProvider = Provider.of<SearchFilterProvider>(context, listen: false);
+    final filterProvider = Provider.of<SearchFilterProvider>(
+      context,
+      listen: false,
+    );
     switch (index) {
       case 0:
         filterProvider.setAppView(AppView.map);
@@ -53,10 +57,7 @@ class _MainLayoutState extends State<MainLayout> {
       body: Stack(
         children: [
           Positioned.fill(
-            child: IndexedStack(
-              index: _currentIndex,
-              children: _screens,
-            ),
+            child: IndexedStack(index: _currentIndex, children: _screens),
           ),
           Positioned(
             top: MediaQuery.of(context).padding.top + kToolbarHeight,
@@ -66,9 +67,7 @@ class _MainLayoutState extends State<MainLayout> {
               onSearchTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                    builder: (context) => const SearchScreen(),
-                  ),
+                  MaterialPageRoute(builder: (context) => const SearchScreen()),
                 );
               },
             ),
