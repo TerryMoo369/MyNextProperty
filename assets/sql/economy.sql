@@ -2,7 +2,7 @@ CREATE TABLE IF NOT EXISTS economy (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     state_id INTEGER NOT NULL REFERENCES state(id),
     district TEXT,
-    date TEXT NOT NULL UNIQUE,
+    date TEXT NOT NULL,
     cpi_index REAL,
     cpi_division TEXT,
     income_mean REAL,
@@ -14,5 +14,6 @@ CREATE TABLE IF NOT EXISTS economy (
     gdp_sector TEXT,
     labour_force REAL,
     participation_rate REAL,
-    unemployment_rate REAL
+    unemployment_rate REAL,
+    UNIQUE(date, state_id, district)
 );
