@@ -102,7 +102,6 @@ class DatabaseHelper {
         ON CONFLICT($conflictColsString) DO NOTHING;
       ''';
     } else {
-      // Standard UPSERT
       sql =
           '''
         INSERT INTO $table ($columns)

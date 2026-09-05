@@ -9,18 +9,15 @@ class DataSyncService {
   final DataGovApi _apiClient = DataGovApi();
   final DatabaseHelper _dbHelper = DatabaseHelper();
 
-  /// Orchestrates fetching from API and mapping to Local SQLite
   Future<void> syncDataset(
     String datasetId, {
     QueryBuilder? queryBuilder,
   }) async {
-    // Extract
     final rawData = await _apiClient.fetchDataset(
       datasetId,
       queryBuilder: queryBuilder,
     );
 
-    // Transform & Load
     final batch = await _dbHelper.getBatch();
     for (var item in rawData) {
       final stateName = item['state']?.toString();
@@ -30,7 +27,6 @@ class DataSyncService {
       }
 
       switch (datasetId) {
-        // 1. Population State
         case Dataset.POPULATION_STATE:
           if (stateId != null) {
             _dbHelper.batchUpsert(
@@ -50,7 +46,6 @@ class DataSyncService {
           }
           break;
 
-        // 2. CPI State
         case Dataset.CPI_STATE:
           if (stateId != null) {
             _dbHelper.batchUpsert(
@@ -73,7 +68,6 @@ class DataSyncService {
           }
           break;
 
-        // 3. Crime District
         case Dataset.CRIME_DISTRICT:
           if (stateId != null) {
             _dbHelper.batchUpsert(
@@ -98,7 +92,6 @@ class DataSyncService {
           }
           break;
 
-        // 4. Household Income District
         case Dataset.HH_INCOME_DISTRICT:
           if (stateId != null) {
             _dbHelper.batchUpsert(
@@ -122,7 +115,6 @@ class DataSyncService {
           }
           break;
 
-        // 5. Fuel Price (National)
         case Dataset.FUELPRICE:
           _dbHelper.batchUpsert(
             batch,
@@ -139,7 +131,6 @@ class DataSyncService {
           );
           break;
 
-        // 6. Hospital Beds
         case Dataset.HOSPITAL_BEDS:
           if (stateId != null) {
             _dbHelper.batchUpsert(
@@ -152,7 +143,6 @@ class DataSyncService {
                 'hospital_type': item['type']?.toString(),
                 'beds': (item['beds'] as num?)?.toInt() ?? 0,
               },
-              // UPDATE HERE: Added staff_type to match SQL
               conflictColumns: [
                 'date',
                 'state_id',
@@ -164,7 +154,6 @@ class DataSyncService {
           }
           break;
 
-        // 7. Healthcare Staff
         case Dataset.HEALTHCARE_STAFF:
           if (stateId != null) {
             _dbHelper.batchUpsert(
@@ -188,7 +177,6 @@ class DataSyncService {
           }
           break;
 
-        // 8. Drug Addicts by Drug Type
         case Dataset.DRUG_ADDICTS_DRUGTYPE:
           if (stateId != null) {
             _dbHelper.batchUpsert(
@@ -216,7 +204,6 @@ class DataSyncService {
           }
           break;
 
-        // 9. Teachers in District
         case Dataset.TEACHERS_DISTRICT:
           if (stateId != null) {
             _dbHelper.batchUpsert(
@@ -235,7 +222,6 @@ class DataSyncService {
           }
           break;
 
-        // 10. SDG 04-6-1: Literacy & Numeracy
         case Dataset.SDG_04_6_1:
           if (stateId != null) {
             _dbHelper.batchUpsert(
@@ -253,7 +239,6 @@ class DataSyncService {
           }
           break;
 
-        // 11. HIES: Household Income, Expenditure & Poverty
         case Dataset.HIES_DISTRICT:
           if (stateId != null) {
             _dbHelper.batchUpsert(
@@ -281,7 +266,6 @@ class DataSyncService {
           }
           break;
 
-        // 12. Labour Force Statistics
         case Dataset.LFS_DISTRICT:
           if (stateId != null) {
             _dbHelper.batchUpsert(
@@ -306,7 +290,6 @@ class DataSyncService {
           }
           break;
 
-        // 13. Forest Reserve Area
         case Dataset.FOREST_RESERVE_STATE:
           if (stateId != null) {
             _dbHelper.batchUpsert(
@@ -323,7 +306,6 @@ class DataSyncService {
           }
           break;
 
-        // 14. Real GDP District
         case Dataset.GDP_DISTRICT_REAL_SUPPLY:
           if (stateId != null) {
             _dbHelper.batchUpsert(
@@ -347,7 +329,6 @@ class DataSyncService {
           }
           break;
 
-        // 15. Basic Amenities Access
         case Dataset.HH_ACCESS_AMENITIES:
           if (stateId != null) {
             _dbHelper.batchUpsert(

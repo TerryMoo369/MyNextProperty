@@ -21,7 +21,6 @@ class MapView extends StatefulWidget {
 class _MapViewState extends State<MapView> {
   List<Polygon> statePolygons = [];
 
-  //Use to get the destination
   LatLng? startPoint;
 
   double? ron95Price;
@@ -137,7 +136,6 @@ class _MapViewState extends State<MapView> {
     }
 
     const double fuelConsumption = 7.0;
-    // 7 litres per 100 km
 
     final Map<String, double> costs = {};
 
@@ -463,7 +461,6 @@ class _MapViewState extends State<MapView> {
     try {
       final features = await _getGeoJsonFeatures();
 
-      // Get all Malaysia states from GeoJSON
       final List<String> states = features
           .map<String>(
             (feature) => feature['properties']['state_name'].toString(),
@@ -474,17 +471,11 @@ class _MapViewState extends State<MapView> {
       String valueColumn = '';
 
       switch (filter) {
-        // =========================
-        // Population
-        // =========================
         case 'Total Population':
           rows = await _repository.getPopulation(states);
           valueColumn = 'total_population';
           break;
 
-        // =========================
-        // Economy
-        // =========================
         case 'Cost of Living (CPI)':
           rows = await _repository.getEconomyMetrics(states);
           valueColumn = 'cpi';
@@ -535,9 +526,6 @@ class _MapViewState extends State<MapView> {
           valueColumn = 'unemployment';
           break;
 
-        // =========================
-        // Crime
-        // =========================
         case 'General Crime':
           rows = await _repository.getCrime(states);
           valueColumn = 'total_crimes';
@@ -548,9 +536,6 @@ class _MapViewState extends State<MapView> {
           valueColumn = 'total_drug_cases';
           break;
 
-        // =========================
-        // Healthcare
-        // =========================
         case 'Hospital Beds':
           rows = await _repository.getHealthcare(states);
           valueColumn = 'total_beds';
@@ -561,9 +546,6 @@ class _MapViewState extends State<MapView> {
           valueColumn = 'total_staff';
           break;
 
-        // =========================
-        // Education
-        // =========================
         case 'Teachers':
           rows = await _repository.getEducation(states);
           valueColumn = 'total_teachers';
@@ -574,9 +556,6 @@ class _MapViewState extends State<MapView> {
           valueColumn = 'literacy_rate';
           break;
 
-        // =========================
-        // Utilities
-        // =========================
         case 'Electricity Access':
           rows = await _repository.getUtilities(states);
           valueColumn = 'electricity_access';
@@ -592,9 +571,6 @@ class _MapViewState extends State<MapView> {
           valueColumn = 'sanitation_access';
           break;
 
-        // =========================
-        // Environment
-        // =========================
         case 'Green Space':
           rows = await _repository.getEnvironment(states);
           valueColumn = 'green_space_area';
@@ -914,7 +890,6 @@ class _MapViewState extends State<MapView> {
 
                     MarkerLayer(
                       markers: [
-                        // Source
                         if (startPoint != null)
                           Marker(
                             point: startPoint!,
@@ -926,7 +901,6 @@ class _MapViewState extends State<MapView> {
                               size: 45,
                             ),
                           ),
-                        // Multiple Destinations
                         ...destinationPoints.entries.map((entry) {
                           final String destinationName = entry.key;
 
@@ -997,14 +971,12 @@ class _MapViewState extends State<MapView> {
                     ),
                   ],
                 ),
-                // Map Filter Legend
                 Positioned(
                   left: 16,
                   bottom: 120,
                   child: _buildMapLegend(selectedFilter, isDark),
                 ),
 
-                // Processing notification
                 if (isProcessingMap)
                   Positioned(
                     top: 80,

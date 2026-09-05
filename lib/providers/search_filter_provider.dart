@@ -7,7 +7,6 @@ class SearchFilterProvider extends ChangeNotifier {
   static const String _prefLocationsKey = 'saved_selected_locations';
   static const String _prefFiltersKey = 'saved_active_filters';
 
-  // All 21 indicators
   static const List<String> availableFilters = [
     'Total Population',
     'Cost of Living (CPI)',
@@ -34,13 +33,11 @@ class SearchFilterProvider extends ChangeNotifier {
 
   AppView _currentView = AppView.map;
   List<String> _selectedLocations = [];
-  List<String> _activeFilters = ['Mean Income']; // Default indicator
-
+  List<String> _activeFilters = ['Mean Income'];
   SearchFilterProvider() {
     _loadSavedPreferences();
   }
 
-  // Getters
   AppView get currentView => _currentView;
 
   List<String> get selectedLocations => List.unmodifiable(_selectedLocations);
