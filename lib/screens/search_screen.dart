@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../Data/repository.dart';
-import '../providers/search_filter_provider.dart'; // ADDED: Missing Provider Import
+import '../providers/search_filter_provider.dart';
+import '../services/geo_location_service.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -14,10 +15,10 @@ class SearchScreen extends StatefulWidget {
 class _SearchScreenState extends State<SearchScreen> {
   final TextEditingController _controller = TextEditingController();
   final DataRepository _repository = DataRepository();
-
   List<String> _recentSearches = [];
   List<String> _suggestions = [];
   bool _isSearching = false;
+  bool _isResolvingLocation = false;
 
   @override
   void initState() {
@@ -67,35 +68,58 @@ class _SearchScreenState extends State<SearchScreen> {
     }
   }
 
-  void _selectLocation(String location) {
+  Future<void> _selectLocation(String location) async {
+    // 1. Immediately lock the UI to block rapid double-taps
+    if (_isResolvingLocation) return;
+    setState(() => _isResolvingLocation = true);
+
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
     final provider = Provider.of<SearchFilterProvider>(context, listen: false);
 
-    // UX UPDATE: Prevent adding duplicates
-    if (provider.selectedLocations.contains(location)) {
-      ScaffoldMessenger.of(context).showSnackBar(
+    String finalLocationName = location;
+
+    // Only geocode if it's a typed district, not a known state suggestion
+    if (!_suggestions.contains(location)) {
+      final stateName = await GeoLocationService().getStateFromAddress(location);
+
+      if (stateName != null && !location.toLowerCase().contains(stateName.toLowerCase())) {
+        finalLocationName = '$location, $stateName';
+      }
+    }
+
+    // 2. Ensure widget hasn't been closed during the await gap
+    if (!mounted) return;
+
+    if (provider.selectedLocations.contains(finalLocationName)) {
+      scaffoldMessenger.showSnackBar(
         SnackBar(
-          content: Text('$location is already selected.'),
+          content: Text('$finalLocationName is already selected.'),
           behavior: SnackBarBehavior.floating,
         ),
       );
+      setState(() => _isResolvingLocation = false); // unlock
       return;
     }
 
-    // UX UPDATE: Enforce the 4-location limit gracefully
     if (provider.selectedLocations.length >= 4) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      scaffoldMessenger.showSnackBar(
         const SnackBar(
           content: Text('You can only compare up to 4 locations at a time.'),
           behavior: SnackBarBehavior.floating,
           backgroundColor: Colors.redAccent,
         ),
       );
+      setState(() => _isResolvingLocation = false); // unlock
       return;
     }
 
-    _saveRecentSearch(location);
-    provider.addLocation(location);
-    Navigator.of(context).pop();
+    _saveRecentSearch(finalLocationName);
+    provider.addLocation(finalLocationName);
+
+    if (navigator.canPop()) {
+      navigator.pop();
+    }
   }
 
   @override
@@ -128,16 +152,14 @@ class _SearchScreenState extends State<SearchScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-
-              // Search Input Field
               TextField(
                 controller: _controller,
                 autofocus: true,
+                enabled: !_isResolvingLocation, // Disable input while geocoding
                 onChanged: _onSearchChanged,
                 onSubmitted: (value) {
                   final location = value.trim();
-
-                  if (location.isNotEmpty) {
+                  if (location.isNotEmpty && !_isResolvingLocation) {
                     _selectLocation(location);
                   }
                 },
@@ -152,7 +174,12 @@ class _SearchScreenState extends State<SearchScreen> {
                     borderSide: BorderSide.none,
                   ),
                   prefixIcon: const Icon(Icons.search, color: Colors.grey),
-                  suffixIcon: _isSearching
+                  suffixIcon: _isResolvingLocation
+                      ? const Padding(
+                    padding: EdgeInsets.all(12),
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                      : _isSearching
                       ? IconButton(
                     icon: const Icon(Icons.cancel, color: Colors.grey, size: 20),
                     onPressed: () {
